@@ -1,149 +1,197 @@
 #!/usr/bin/env python3
 """
-MCP Client - Wrapper to communicate with MCP servers and use their tools
+ADB Agent - CrewAI agent for controlling Android devices
 """
+from crewai import Agent, Task, Crew
+from langchain_community.llms import VLLMOpenAI
+from crewai_tools import tool
 import json
-from typing import Callable, Any
+import sys
+sys.path.insert(0, '.')
+
+from config.settings import LLM_BASE_URL, LLM_MODEL
+from utils.mcp_client import MCPClient, create_crewai_tool
+from mcp_servers import adb_mcp
 
 
-class MCPClient:
+# Initialize MCP Client
+mcp_client = MCPClient(adb_mcp)
+
+# Create CrewAI tools from MCP tools
+@tool("list_devices")
+def list_devices_tool() -> str:
+    """List all connected Android devices with their IDs and states"""
+    result = mcp_client.call_tool("list_devices")
+    return json.dumps(result, indent=2)
+
+
+@tool("connect_device")
+def connect_device_tool(device_id: str = None) -> str:
     """
-    Client for interacting with MCP servers
-    For now, uses direct function calls (same process)
-    Later can be extended to stdio/HTTP communication
-    """
-    
-    def __init__(self, server_module):
-        """
-        Initialize MCP client with a server module
-        
-        Args:
-            server_module: The imported MCP server module
-        """
-        self.server_module = server_module
-        self.tools = {}
-        self._load_tools()
-    
-    def _load_tools(self):
-        """Load available tools from the MCP server"""
-        # Get the FastMCP instance
-        if hasattr(self.server_module, 'mcp'):
-            mcp_instance = self.server_module.mcp
-            
-            # Access the tools from FastMCP
-            if hasattr(mcp_instance, '_tools'):
-                for tool_name, tool_obj in mcp_instance._tools.items():
-                    self.tools[tool_name] = tool_obj
-    
-    def call_tool(self, tool_name: str, **kwargs) -> dict:
-        """
-        Call an MCP tool by name
-        
-        Args:
-            tool_name: Name of the tool to call
-            **kwargs: Arguments to pass to the tool
-            
-        Returns:
-            Tool result as dictionary
-        """
-        if tool_name not in self.tools:
-            return {
-                "success": False,
-                "error": f"Tool '{tool_name}' not found. Available: {list(self.tools.keys())}"
-            }
-        
-        try:
-            tool = self.tools[tool_name]
-            
-            # Call the tool's function
-            if hasattr(tool, 'fn'):
-                result = tool.fn(**kwargs)
-            else:
-                # Fallback: try calling directly
-                result = tool(**kwargs)
-            
-            # Parse JSON result if it's a string
-            if isinstance(result, str):
-                try:
-                    return json.loads(result)
-                except json.JSONDecodeError:
-                    return {"success": True, "result": result}
-            
-            return result
-            
-        except Exception as e:
-            return {
-                "success": False,
-                "error": f"Error calling tool '{tool_name}': {str(e)}"
-            }
-    
-    def get_tool_descriptions(self) -> dict:
-        """Get descriptions of all available tools"""
-        descriptions = {}
-        for tool_name, tool_obj in self.tools.items():
-            if hasattr(tool_obj, 'fn'):
-                fn = tool_obj.fn
-                descriptions[tool_name] = {
-                    "name": tool_name,
-                    "description": fn.__doc__ or "No description available",
-                    "parameters": fn.__annotations__ if hasattr(fn, '__annotations__') else {}
-                }
-        return descriptions
-    
-    def list_tools(self) -> list:
-        """List all available tool names"""
-        return list(self.tools.keys())
-
-
-def create_crewai_tool(mcp_client: MCPClient, tool_name: str) -> Callable:
-    """
-    Create a CrewAI-compatible tool function from an MCP tool
+    Connect to a specific Android device
     
     Args:
-        mcp_client: MCP client instance
-        tool_name: Name of the MCP tool
+        device_id: Device ID to connect to (optional, auto-selects if only one device)
+    """
+    kwargs = {}
+    if device_id:
+        kwargs["device_id"] = device_id
+    
+    result = mcp_client.call_tool("connect_device", **kwargs)
+    return json.dumps(result, indent=2)
+
+
+@tool("get_device_info")
+def get_device_info_tool() -> str:
+    """Get comprehensive information about the currently connected device"""
+    result = mcp_client.call_tool("get_device_info")
+    return json.dumps(result, indent=2)
+
+
+@tool("execute_shell_command")
+def execute_shell_command_tool(command: str) -> str:
+    """
+    Execute a shell command on the connected Android device
+    
+    Args:
+        command: Shell command to execute (e.g., 'ls /sdcard')
+    """
+    result = mcp_client.call_tool("execute_shell_command", command=command)
+    return json.dumps(result, indent=2)
+
+
+@tool("disconnect_device")
+def disconnect_device_tool() -> str:
+    """Disconnect from the currently connected device"""
+    result = mcp_client.call_tool("disconnect_device")
+    return json.dumps(result, indent=2)
+
+
+@tool("get_active_device")
+def get_active_device_tool() -> str:
+    """Get the currently active/connected device ID"""
+    result = mcp_client.call_tool("get_active_device")
+    return json.dumps(result, indent=2)
+
+
+def create_adb_agent(verbose: bool = True) -> Agent:
+    """
+    Create and configure the ADB Agent
+    
+    Args:
+        verbose: Enable verbose output
         
     Returns:
-        Function that can be used as a CrewAI tool
+        Configured CrewAI Agent
     """
-    def tool_wrapper(**kwargs) -> str:
-        """Wrapper function for CrewAI"""
-        result = mcp_client.call_tool(tool_name, **kwargs)
-        return json.dumps(result, indent=2)
+    # Configure local LLM
+    local_llm = VLLMOpenAI(
+        openai_api_base=LLM_BASE_URL,
+        openai_api_key="dummy-key-not-needed",
+        model_name=LLM_MODEL,
+        temperature=0.1,
+        max_tokens=2000
+    )
     
-    # Get the original tool for documentation
-    if tool_name in mcp_client.tools:
-        tool_obj = mcp_client.tools[tool_name]
-        if hasattr(tool_obj, 'fn'):
-            original_fn = tool_obj.fn
-            tool_wrapper.__name__ = tool_name
-            tool_wrapper.__doc__ = original_fn.__doc__ or f"MCP tool: {tool_name}"
+    # Create agent
+    agent = Agent(
+        role="Android Device Controller",
+        goal="Control and manage Android devices efficiently using ADB commands",
+        backstory="""You are an expert in Android device management and ADB (Android Debug Bridge).
+        You have deep knowledge of Android internals, shell commands, and device automation.
+        You help users interact with their Android devices through natural language commands.
+        You always provide clear, accurate information and execute commands safely.""",
+        llm=local_llm,
+        tools=[
+            list_devices_tool,
+            connect_device_tool,
+            get_device_info_tool,
+            execute_shell_command_tool,
+            disconnect_device_tool,
+            get_active_device_tool
+        ],
+        verbose=verbose,
+        allow_delegation=False
+    )
     
-    return tool_wrapper
+    return agent
 
 
-# Example usage functions
-def test_mcp_client():
-    """Test the MCP client with ADB server"""
-    print("Testing MCP Client...")
+def run_adb_task(task_description: str, verbose: bool = True) -> str:
+    """
+    Execute a task using the ADB agent
     
-    # Import ADB MCP server
-    import sys
-    sys.path.insert(0, '.')
-    from mcp_servers import adb_mcp
+    Args:
+        task_description: Natural language description of what to do
+        verbose: Enable verbose output
+        
+    Returns:
+        Task result
+    """
+    # Create agent
+    agent = create_adb_agent(verbose=verbose)
     
-    # Create client
-    client = MCPClient(adb_mcp)
+    # Create task
+    task = Task(
+        description=task_description,
+        agent=agent,
+        expected_output="A clear summary of the action taken and results"
+    )
     
-    print(f"Available tools: {client.list_tools()}")
+    # Create crew and execute
+    crew = Crew(
+        agents=[agent],
+        tasks=[task],
+        verbose=verbose
+    )
     
-    # Test list_devices
-    print("\nTesting list_devices:")
-    result = client.call_tool("list_devices")
-    print(json.dumps(result, indent=2))
+    result = crew.kickoff()
+    return result
+
+
+# Interactive mode
+def interactive_mode():
+    """Run agent in interactive mode"""
+    print("=" * 60)
+    print("ADB Agent - Interactive Mode")
+    print("=" * 60)
+    print("\nCommands:")
+    print("  - Ask anything about Android devices")
+    print("  - 'quit' or 'exit' to stop")
+    print("=" * 60)
     
-    return client
+    while True:
+        try:
+            user_input = input("\n🤖 You: ").strip()
+            
+            if user_input.lower() in ['quit', 'exit', 'q']:
+                print("\n👋 Goodbye!")
+                break
+            
+            if not user_input:
+                continue
+            
+            print("\n🤔 Agent is thinking...\n")
+            result = run_adb_task(user_input, verbose=True)
+            print(f"\n✅ Result:\n{result}\n")
+            
+        except KeyboardInterrupt:
+            print("\n\n👋 Goodbye!")
+            break
+        except Exception as e:
+            print(f"\n❌ Error: {e}")
 
 
 if __name__ == "__main__":
-    test_mcp_client()
+    # Test mode - can be run directly
+    import sys
+    
+    if len(sys.argv) > 1:
+        # Run with command line argument
+        task = " ".join(sys.argv[1:])
+        print(f"Running task: {task}\n")
+        result = run_adb_task(task, verbose=True)
+        print(f"\nResult: {result}")
+    else:
+        # Interactive mode
+        interactive_mode()
