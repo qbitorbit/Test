@@ -22,3 +22,139 @@ python main.py "show me device storage info"
 python main.py "is my battery low?"
 python main.py "what phone do I have?"
 python main.py "show me system information"
+
+# Start with basics
+list all connected devices
+connect to the device
+get device info
+what's the active device?
+
+# Simple app operations
+list installed packages
+launch chrome
+stop chrome
+
+# Full app lifecycle
+install the apk from /path/to/app.apk
+launch com.example.app
+stop com.example.app
+uninstall com.example.app
+
+# Take a look at what's on screen
+take a screenshot
+
+# Basic navigation
+press home
+press back
+press menu
+tap at coordinates 500 300
+
+# Swipe gestures
+swipe from 500 100 to 500 800
+swipe from 800 500 to 100 500
+
+# Combined navigation
+press home then take a screenshot
+swipe up then press back
+
+# Text entry
+input text hello world
+input text test@example.com
+press enter
+
+# Form filling simulation
+tap at 500 300 then input text username then press enter
+
+
+# Capture states
+take a screenshot before_test.png
+press home
+take a screenshot after_home.png
+launch settings
+take a screenshot settings_screen.png
+
+# Push and pull files
+push file test.txt to /sdcard/test.txt
+pull file /sdcard/test.txt to local_test.txt
+execute shell command ls /sdcard/
+
+# Check battery first
+get device info
+
+# Power button simulation
+press power
+press power
+
+# Reboot operations (careful with these!)
+reboot device in normal mode
+reboot device in recovery mode
+
+# Full app test cycle
+connect to the device
+list installed packages
+launch com.android.chrome
+take a screenshot chrome_launched.png
+press back
+stop com.android.chrome
+
+# Navigate and interact
+press home
+take a screenshot home.png
+swipe from 500 1500 to 500 500
+take a screenshot after_swipe.png
+tap at 200 400
+input text search query
+press enter
+
+# Gather system info
+get device info
+list installed packages
+execute shell command df -h
+execute shell command dumpsys battery
+take a screenshot system_state.png
+
+# File operations
+execute shell command ls /sdcard/
+push file local.txt to /sdcard/upload.txt
+execute shell command cat /sdcard/upload.txt
+pull file /sdcard/upload.txt to downloaded.txt
+execute shell command rm /sdcard/upload.txt
+
+# System exploration
+execute shell command pm list packages | grep chrome
+execute shell command dumpsys window | grep mCurrentFocus
+execute shell command getprop ro.build.version.release
+execute shell command df -h
+execute shell command top -n 1
+execute shell command ps | grep system_server
+
+# Simulate user interactions (adjust coordinates for your device)
+press home
+tap at 540 960  # Center of 1080p screen
+swipe from 540 1800 to 540 400  # Swipe up
+swipe from 100 960 to 980 960   # Swipe right
+tap at 100 100                   # Top-left corner
+tap at 980 1920                  # Bottom-right corner
+
+# Find and launch apps
+list installed packages
+launch com.android.settings
+get device info
+press home
+launch com.android.chrome
+
+# Create a visual story
+take a screenshot step1.png
+press home
+take a screenshot step2.png
+launch settings
+take a screenshot step3.png
+press back
+take a screenshot step4.png
+
+# Complete device checkup
+get device info
+list installed packages
+execute shell command dumpsys battery
+execute shell command getprop ro.product.model
+take a screenshot current_state.png
