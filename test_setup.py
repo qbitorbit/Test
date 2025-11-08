@@ -191,16 +191,34 @@ Task: {task_description}
             # Replace placeholders with actual values from context
             for key, value in params.items():
                 if isinstance(value, str):
-                    # Replace <active_device_id> with actual device ID
                     if value == "<active_device_id>" and "device_id" in context:
                         params[key] = context["device_id"]
-                    # Replace None string with actual None
                     elif value in ["null", "None", "none"]:
                         params[key] = None
             
             print(f"⚙️  Step {i}/{len(actions)}: {tool_name}({params})")
             
             result = self.mcp_client.call_tool(tool_name, **params)
+            
+            # If tool failed because no device connected, auto-connect and retry
+            if not result.get("success") and "No device connected" in result.get("error", ""):
+                print(f"⚠️  Device not connected, auto-connecting...")
+                
+                # Try to connect
+                connect_result = self.mcp_client.call_tool("connect_device")
+                if connect_result.get("success"):
+                    print(f"✅ Auto-connected to device")
+                    
+                    # Update context
+                    if connect_result.get("device_id"):
+                        context["device_id"] = connect_result.get("device_id")
+                    
+                    # Retry the original action
+                    print(f"🔄 Retrying: {tool_name}({params})")
+                    result = self.mcp_client.call_tool(tool_name, **params)
+                else:
+                    print(f"❌ Auto-connect failed: {connect_result.get('error')}")
+            
             results.append({
                 "tool": tool_name,
                 "params": params,
@@ -211,7 +229,6 @@ Task: {task_description}
             
             # Update context with important values from this result
             if result.get("success"):
-                # Store device_id if this was list_devices or connect_device
                 if tool_name == "list_devices" and result.get("devices"):
                     devices = result.get("devices", [])
                     if devices:
