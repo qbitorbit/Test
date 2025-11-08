@@ -40,21 +40,13 @@ class MCPClient:
             if hasattr(self.server_module, func_name):
                 func = getattr(self.server_module, func_name)
                 
-                # Debug: print what we got
-                print(f"[DEBUG] Loading {func_name}: type={type(func).__name__}, has_fn={hasattr(func, 'fn')}")
-                
                 # If it's wrapped by FastMCP, unwrap it
                 if hasattr(func, 'fn'):
                     # It's a FunctionTool, get the actual function
-                    actual_func = func.fn
-                    print(f"[DEBUG]   -> Unwrapped to: type={type(actual_func).__name__}, callable={callable(actual_func)}")
-                    self.tools[func_name] = actual_func
+                    self.tools[func_name] = func.fn
                 elif callable(func):
                     # It's already a callable function
-                    print(f"[DEBUG]   -> Already callable")
                     self.tools[func_name] = func
-                else:
-                    print(f"[DEBUG]   -> WARNING: Not callable and no .fn attribute!")
     
     def call_tool(self, tool_name: str, **kwargs) -> dict:
         """
@@ -75,9 +67,6 @@ class MCPClient:
         
         try:
             func = self.tools[tool_name]
-            
-            # Debug: check what we're about to call
-            print(f"[DEBUG call_tool] Calling {tool_name}: type={type(func).__name__}, callable={callable(func)}")
             
             # Call the function directly
             result = func(**kwargs)
