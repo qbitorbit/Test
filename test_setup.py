@@ -1,136 +1,169 @@
 #!/usr/bin/env python3
 """
-MCP Client - Wrapper to communicate with MCP servers and use their tools
-Simplified to directly call tool functions from the server module
+ADB Server - Plain Python functions (no FastMCP decorators)
+Simple, direct Android device control
 """
+import subprocess
 import json
-import importlib
-from typing import Callable, Any
+from typing import Optional
 
 
-class MCPClient:
-    """
-    Client for interacting with MCP servers
-    Directly calls tool functions from the server module
-    """
-    
-    def __init__(self, server_module):
-        """
-        Initialize MCP client with a server module
+# Global state for active connection
+active_device_id: Optional[str] = None
+
+
+def execute_adb(command: list[str], device_id: Optional[str] = None) -> dict:
+    """Execute an ADB command and return results"""
+    try:
+        adb_cmd = ["adb"]
+        if device_id:
+            adb_cmd.extend(["-s", device_id])
+        adb_cmd.extend(command)
         
-        Args:
-            server_module: The imported MCP server module
-        """
-        # Don't reload - it breaks function unwrapping
-        self.server_module = server_module
-        self.tools = {}
-        self._load_tools()
-    
-    def _load_tools(self):
-        """Load tool function names from the server module"""
-        # List of known tool function names from adb_mcp.py
-        tool_functions = [
-            'list_devices',
-            'connect_device', 
-            'disconnect_device',
-            'get_device_info',
-            'execute_shell_command',
-            'get_active_device'
-        ]
+        print(f"[ADB] Executing: {' '.join(adb_cmd)}")
         
-        # Just store the names, we'll get functions fresh on each call
-        for func_name in tool_functions:
-            if hasattr(self.server_module, func_name):
-                self.tools[func_name] = True  # Just mark as available
-    
-    def call_tool(self, tool_name: str, **kwargs) -> dict:
-        """
-        Call an MCP tool by name
+        result = subprocess.run(
+            adb_cmd,
+            capture_output=True,
+            text=True,
+            timeout=30
+        )
         
-        Args:
-            tool_name: Name of the tool to call
-            **kwargs: Arguments to pass to the tool
-            
-        Returns:
-            Tool result as dictionary
-        """
-        if tool_name not in self.tools:
-            return {
+        return {
+            "success": result.returncode == 0,
+            "stdout": result.stdout.strip(),
+            "stderr": result.stderr.strip(),
+            "return_code": result.returncode
+        }
+    except Exception as e:
+        return {"success": False, "stdout": "", "stderr": str(e), "return_code": -1}
+
+
+def list_devices() -> str:
+    """List all connected Android devices"""
+    result = execute_adb(["devices", "-l"])
+    
+    if not result["success"]:
+        return json.dumps({"error": result["stderr"], "devices": []})
+    
+    lines = result["stdout"].split("\n")[1:]
+    devices = []
+    
+    for line in lines:
+        if line.strip():
+            parts = line.split()
+            if len(parts) >= 2:
+                device_info = {"device_id": parts[0], "state": parts[1]}
+                for part in parts[2:]:
+                    if ":" in part:
+                        key, value = part.split(":", 1)
+                        device_info[key] = value
+                devices.append(device_info)
+    
+    return json.dumps({"success": True, "count": len(devices), "devices": devices}, indent=2)
+
+
+def connect_device(device_id: Optional[str] = None) -> str:
+    """Connect to an Android device"""
+    global active_device_id
+    
+    if not device_id:
+        devices_result = json.loads(list_devices())
+        devices = devices_result.get("devices", [])
+        
+        if len(devices) == 0:
+            return json.dumps({"success": False, "error": "No devices connected"})
+        elif len(devices) == 1:
+            device_id = devices[0]["device_id"]
+        else:
+            return json.dumps({
                 "success": False,
-                "error": f"Tool '{tool_name}' not found. Available: {list(self.tools.keys())}"
-            }
-        
-        try:
-            # Get the function fresh from the module each time
-            func = getattr(self.server_module, tool_name)
-            
-            # Unwrap if needed
-            if hasattr(func, 'fn') and callable(func.fn):
-                actual_func = func.fn
-            elif callable(func):
-                actual_func = func
-            else:
-                return {
-                    "success": False,
-                    "error": f"Tool '{tool_name}' is not callable"
-                }
-            
-            # Call the function
-            result = actual_func(**kwargs)
-            
-            # Parse JSON result if it's a string
-            if isinstance(result, str):
-                try:
-                    return json.loads(result)
-                except json.JSONDecodeError:
-                    return {"success": True, "result": result}
-            
-            return result
-            
-        except Exception as e:
-            import traceback
-            return {
-                "success": False,
-                "error": f"Error calling tool '{tool_name}': {str(e)}",
-                "traceback": traceback.format_exc()
-            }
+                "error": f"Multiple devices found. Please specify device_id",
+                "available_devices": [d["device_id"] for d in devices]
+            })
     
-    def get_tool_descriptions(self) -> dict:
-        """Get descriptions of all available tools"""
-        descriptions = {}
-        for tool_name, func in self.tools.items():
-            descriptions[tool_name] = {
-                "name": tool_name,
-                "description": func.__doc__ or "No description available",
-            }
-        return descriptions
+    result = execute_adb(["get-state"], device_id)
     
-    def list_tools(self) -> list:
-        """List all available tool names"""
-        return list(self.tools.keys())
+    if result["success"] and "device" in result["stdout"]:
+        active_device_id = device_id
+        return json.dumps({
+            "success": True,
+            "device_id": device_id,
+            "state": result["stdout"],
+            "message": f"Connected to device {device_id}"
+        }, indent=2)
+    else:
+        return json.dumps({"success": False, "error": f"Cannot connect to device {device_id}"})
 
 
-def test_mcp_client():
-    """Test the MCP client with ADB server"""
-    print("Testing MCP Client...")
+def disconnect_device() -> str:
+    """Disconnect from currently active device"""
+    global active_device_id
     
-    # Import ADB MCP server
-    import sys
-    sys.path.insert(0, '.')
-    from mcp_servers import adb_mcp
+    if not active_device_id:
+        return json.dumps({"success": False, "error": "No device currently connected"})
     
-    # Create client
-    client = MCPClient(adb_mcp)
+    disconnected_id = active_device_id
+    active_device_id = None
     
-    print(f"Available tools: {client.list_tools()}")
-    
-    # Test list_devices
-    print("\nTesting list_devices:")
-    result = client.call_tool("list_devices")
-    print(json.dumps(result, indent=2))
-    
-    return client
+    return json.dumps({"success": True, "message": f"Disconnected from device {disconnected_id}"})
 
 
-if __name__ == "__main__":
-    test_mcp_client()
+def get_device_info() -> str:
+    """Get comprehensive device information"""
+    if not active_device_id:
+        return json.dumps({"success": False, "error": "No device connected. Use connect_device() first"})
+    
+    properties = {
+        "device_id": active_device_id,
+        "model": "",
+        "manufacturer": "",
+        "android_version": "",
+        "sdk_version": "",
+        "battery_level": ""
+    }
+    
+    prop_mapping = {
+        "model": "ro.product.model",
+        "manufacturer": "ro.product.manufacturer",
+        "android_version": "ro.build.version.release",
+        "sdk_version": "ro.build.version.sdk"
+    }
+    
+    for key, prop in prop_mapping.items():
+        result = execute_adb(["shell", "getprop", prop], active_device_id)
+        if result["success"]:
+            properties[key] = result["stdout"]
+    
+    # Get battery
+    battery_result = execute_adb(["shell", "dumpsys", "battery"], active_device_id)
+    if battery_result["success"]:
+        for line in battery_result["stdout"].split("\n"):
+            if "level:" in line:
+                properties["battery_level"] = line.split("level:")[1].strip()
+                break
+    
+    return json.dumps({"success": True, "device_info": properties}, indent=2)
+
+
+def execute_shell_command(command: str) -> str:
+    """Execute a shell command on the connected device"""
+    if not active_device_id:
+        return json.dumps({"success": False, "error": "No device connected. Use connect_device() first"})
+    
+    result = execute_adb(["shell", command], active_device_id)
+    
+    return json.dumps({
+        "success": result["success"],
+        "command": command,
+        "output": result["stdout"],
+        "error": result["stderr"] if not result["success"] else None
+    }, indent=2)
+
+
+def get_active_device() -> str:
+    """Get the currently active device ID"""
+    if active_device_id:
+        return json.dumps({"success": True, "active_device_id": active_device_id})
+    else:
+        return json.dumps({"success": False, "message": "No device currently connected"})
