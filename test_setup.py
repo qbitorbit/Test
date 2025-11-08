@@ -4,6 +4,7 @@ MCP Client - Wrapper to communicate with MCP servers and use their tools
 Simplified to directly call tool functions from the server module
 """
 import json
+import importlib
 from typing import Callable, Any
 
 
@@ -20,7 +21,8 @@ class MCPClient:
         Args:
             server_module: The imported MCP server module
         """
-        self.server_module = server_module
+        # Reload module to avoid caching issues
+        self.server_module = importlib.reload(server_module)
         self.tools = {}
         self._load_tools()
     
@@ -40,12 +42,13 @@ class MCPClient:
             if hasattr(self.server_module, func_name):
                 func = getattr(self.server_module, func_name)
                 
-                # If it's wrapped by FastMCP, unwrap it
-                if hasattr(func, 'fn'):
-                    # It's a FunctionTool, get the actual function
+                # Unwrap FastMCP FunctionTool wrapper
+                if hasattr(func, 'fn') and callable(func.fn):
                     self.tools[func_name] = func.fn
                 elif callable(func):
-                    # It's already a callable function
+                    self.tools[func_name] = func
+                else:
+                    # Last resort: try to call it as is
                     self.tools[func_name] = func
     
     def call_tool(self, tool_name: str, **kwargs) -> dict:
