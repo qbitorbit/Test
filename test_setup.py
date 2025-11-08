@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
 MCP Client - Wrapper to communicate with MCP servers and use their tools
+Simplified to directly call tool functions from the server module
 """
 import json
 from typing import Callable, Any
@@ -9,8 +10,7 @@ from typing import Callable, Any
 class MCPClient:
     """
     Client for interacting with MCP servers
-    For now, uses direct function calls (same process)
-    Later can be extended to stdio/HTTP communication
+    Directly calls tool functions from the server module
     """
     
     def __init__(self, server_module):
@@ -25,35 +25,25 @@ class MCPClient:
         self._load_tools()
     
     def _load_tools(self):
-        """Load available tools from the MCP server"""
-        # Get the FastMCP instance
-        if hasattr(self.server_module, 'mcp'):
-            mcp_instance = self.server_module.mcp
-            
-            # Try different ways to access tools from FastMCP
-            if hasattr(mcp_instance, 'list_tools'):
-                # Use list_tools method if available
-                try:
-                    tools_list = mcp_instance.list_tools()
-                    for tool in tools_list:
-                        self.tools[tool.name] = tool
-                except:
-                    pass
-            
-            # Try accessing _tools attribute
-            if hasattr(mcp_instance, '_tools'):
-                for tool_name, tool_obj in mcp_instance._tools.items():
-                    self.tools[tool_name] = tool_obj
-            
-            # Fallback: scan module for @mcp.tool decorated functions
-            if not self.tools:
-                for attr_name in dir(self.server_module):
-                    attr = getattr(self.server_module, attr_name)
-                    # Check if it's a decorated tool function
-                    if callable(attr) and not attr_name.startswith('_'):
-                        # Skip common module functions
-                        if attr_name not in ['execute_adb']:
-                            self.tools[attr_name] = attr
+        """Load tool functions directly from the server module"""
+        # Get all functions decorated with @mcp.tool()
+        # These are the actual tool implementations
+        
+        # List of known tool function names from adb_mcp.py
+        tool_functions = [
+            'list_devices',
+            'connect_device', 
+            'disconnect_device',
+            'get_device_info',
+            'execute_shell_command',
+            'get_active_device'
+        ]
+        
+        for func_name in tool_functions:
+            if hasattr(self.server_module, func_name):
+                func = getattr(self.server_module, func_name)
+                # Store the actual function
+                self.tools[func_name] = func
     
     def call_tool(self, tool_name: str, **kwargs) -> dict:
         """
@@ -73,14 +63,10 @@ class MCPClient:
             }
         
         try:
-            tool = self.tools[tool_name]
+            func = self.tools[tool_name]
             
-            # Call the tool's function
-            if hasattr(tool, 'fn'):
-                result = tool.fn(**kwargs)
-            else:
-                # Fallback: try calling directly
-                result = tool(**kwargs)
+            # Call the function directly
+            result = func(**kwargs)
             
             # Parse JSON result if it's a string
             if isinstance(result, str):
@@ -92,22 +78,21 @@ class MCPClient:
             return result
             
         except Exception as e:
+            import traceback
             return {
                 "success": False,
-                "error": f"Error calling tool '{tool_name}': {str(e)}"
+                "error": f"Error calling tool '{tool_name}': {str(e)}",
+                "traceback": traceback.format_exc()
             }
     
     def get_tool_descriptions(self) -> dict:
         """Get descriptions of all available tools"""
         descriptions = {}
-        for tool_name, tool_obj in self.tools.items():
-            if hasattr(tool_obj, 'fn'):
-                fn = tool_obj.fn
-                descriptions[tool_name] = {
-                    "name": tool_name,
-                    "description": fn.__doc__ or "No description available",
-                    "parameters": fn.__annotations__ if hasattr(fn, '__annotations__') else {}
-                }
+        for tool_name, func in self.tools.items():
+            descriptions[tool_name] = {
+                "name": tool_name,
+                "description": func.__doc__ or "No description available",
+            }
         return descriptions
     
     def list_tools(self) -> list:
@@ -115,34 +100,6 @@ class MCPClient:
         return list(self.tools.keys())
 
 
-def create_crewai_tool(mcp_client: MCPClient, tool_name: str) -> Callable:
-    """
-    Create a CrewAI-compatible tool function from an MCP tool
-    
-    Args:
-        mcp_client: MCP client instance
-        tool_name: Name of the MCP tool
-        
-    Returns:
-        Function that can be used as a CrewAI tool
-    """
-    def tool_wrapper(**kwargs) -> str:
-        """Wrapper function for CrewAI"""
-        result = mcp_client.call_tool(tool_name, **kwargs)
-        return json.dumps(result, indent=2)
-    
-    # Get the original tool for documentation
-    if tool_name in mcp_client.tools:
-        tool_obj = mcp_client.tools[tool_name]
-        if hasattr(tool_obj, 'fn'):
-            original_fn = tool_obj.fn
-            tool_wrapper.__name__ = tool_name
-            tool_wrapper.__doc__ = original_fn.__doc__ or f"MCP tool: {tool_name}"
-    
-    return tool_wrapper
-
-
-# Example usage functions
 def test_mcp_client():
     """Test the MCP client with ADB server"""
     print("Testing MCP Client...")
