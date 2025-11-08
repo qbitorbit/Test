@@ -76,6 +76,9 @@ class MCPClient:
         try:
             func = self.tools[tool_name]
             
+            # Debug: check what we're about to call
+            print(f"[DEBUG call_tool] Calling {tool_name}: type={type(func).__name__}, callable={callable(func)}")
+            
             # Call the function directly
             result = func(**kwargs)
             
