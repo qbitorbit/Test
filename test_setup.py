@@ -27,7 +27,7 @@ class MCPClient:
         self._load_tools()
     
     def _load_tools(self):
-        """Load tool functions directly from the server module"""
+        """Load tool function names from the server module"""
         # List of known tool function names from adb_mcp.py
         tool_functions = [
             'list_devices',
@@ -38,18 +38,10 @@ class MCPClient:
             'get_active_device'
         ]
         
+        # Just store the names, we'll get functions fresh on each call
         for func_name in tool_functions:
             if hasattr(self.server_module, func_name):
-                func = getattr(self.server_module, func_name)
-                
-                # Unwrap FastMCP FunctionTool wrapper
-                if hasattr(func, 'fn') and callable(func.fn):
-                    self.tools[func_name] = func.fn
-                elif callable(func):
-                    self.tools[func_name] = func
-                else:
-                    # Last resort: try to call it as is
-                    self.tools[func_name] = func
+                self.tools[func_name] = True  # Just mark as available
     
     def call_tool(self, tool_name: str, **kwargs) -> dict:
         """
@@ -69,10 +61,22 @@ class MCPClient:
             }
         
         try:
-            func = self.tools[tool_name]
+            # Get the function fresh from the module each time
+            func = getattr(self.server_module, tool_name)
             
-            # Call the function directly
-            result = func(**kwargs)
+            # Unwrap if needed
+            if hasattr(func, 'fn') and callable(func.fn):
+                actual_func = func.fn
+            elif callable(func):
+                actual_func = func
+            else:
+                return {
+                    "success": False,
+                    "error": f"Tool '{tool_name}' is not callable"
+                }
+            
+            # Call the function
+            result = actual_func(**kwargs)
             
             # Parse JSON result if it's a string
             if isinstance(result, str):
