@@ -1,296 +1,499 @@
 #!/usr/bin/env python3
 """
-Enhanced ADB Server - More Android control functions
-Based on phone-mcp capabilities
+Enhanced Agent Orchestrator - Beautiful output formatting
 """
-import subprocess
 import json
-import time
-from typing import Optional
+import re
+import sys
+sys.path.insert(0, '.')
+
+from config.settings import LLM_BASE_URL, LLM_MODEL
+from utils.mcp_client import MCPClient
+from mcp_servers import adb_simple
+import requests
 
 
-# Global state
-active_device_id: Optional[str] = None
+# ANSI Color codes for terminal
+class Colors:
+    HEADER = '\033[95m'
+    BLUE = '\033[94m'
+    CYAN = '\033[96m'
+    GREEN = '\033[92m'
+    YELLOW = '\033[93m'
+    RED = '\033[91m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+    END = '\033[0m'
+    DIM = '\033[2m'
 
 
-def execute_adb(command: list[str], device_id: Optional[str] = None) -> dict:
-    """Execute an ADB command"""
-    try:
-        adb_cmd = ["adb"]
-        if device_id:
-            adb_cmd.extend(["-s", device_id])
-        adb_cmd.extend(command)
+class OutputFormatter:
+    """Handles beautiful output formatting"""
+    
+    @staticmethod
+    def print_header(text: str):
+        """Print a section header"""
+        width = 70
+        print(f"\n{Colors.BOLD}{Colors.CYAN}{'='*width}{Colors.END}")
+        print(f"{Colors.BOLD}{Colors.CYAN}{text.center(width)}{Colors.END}")
+        print(f"{Colors.BOLD}{Colors.CYAN}{'='*width}{Colors.END}\n")
+    
+    @staticmethod
+    def print_subheader(text: str):
+        """Print a subsection header"""
+        print(f"\n{Colors.BOLD}{Colors.BLUE}▸ {text}{Colors.END}")
+        print(f"{Colors.DIM}{'─'*68}{Colors.END}")
+    
+    @staticmethod
+    def print_success(text: str):
+        """Print success message"""
+        print(f"{Colors.GREEN}✅ {text}{Colors.END}")
+    
+    @staticmethod
+    def print_error(text: str):
+        """Print error message"""
+        print(f"{Colors.RED}❌ {text}{Colors.END}")
+    
+    @staticmethod
+    def print_warning(text: str):
+        """Print warning message"""
+        print(f"{Colors.YELLOW}⚠️  {text}{Colors.END}")
+    
+    @staticmethod
+    def print_info(text: str):
+        """Print info message"""
+        print(f"{Colors.CYAN}ℹ️  {text}{Colors.END}")
+    
+    @staticmethod
+    def print_step(step_num: int, total: int, text: str):
+        """Print step indicator"""
+        print(f"\n{Colors.BOLD}{Colors.YELLOW}⚙️  Step {step_num}/{total}:{Colors.END} {text}")
+    
+    @staticmethod
+    def format_device_info(info: dict) -> str:
+        """Format device information beautifully"""
+        lines = [
+            f"{Colors.BOLD}Device Information:{Colors.END}",
+            f"  📱 Model: {Colors.GREEN}{info.get('model', 'Unknown')}{Colors.END}",
+            f"  🏭 Manufacturer: {Colors.GREEN}{info.get('manufacturer', 'Unknown')}{Colors.END}",
+            f"  🤖 Android: {Colors.GREEN}{info.get('android_version', 'Unknown')}{Colors.END}",
+            f"  📊 SDK: {Colors.GREEN}{info.get('sdk_version', 'Unknown')}{Colors.END}",
+            f"  🔋 Battery: {Colors.GREEN}{info.get('battery_level', 'Unknown')}{Colors.END}",
+        ]
+        return "\n".join(lines)
+    
+    @staticmethod
+    def format_devices_list(devices: list) -> str:
+        """Format device list"""
+        if not devices:
+            return f"{Colors.YELLOW}No devices connected{Colors.END}"
         
-        result = subprocess.run(adb_cmd, capture_output=True, text=True, timeout=30)
-        return {
-            "success": result.returncode == 0,
-            "stdout": result.stdout.strip(),
-            "stderr": result.stderr.strip()
+        lines = [f"{Colors.BOLD}Connected Devices ({len(devices)}):{Colors.END}"]
+        for i, device in enumerate(devices, 1):
+            status_color = Colors.GREEN if device.get('state') == 'device' else Colors.YELLOW
+            lines.append(
+                f"  {i}. {Colors.CYAN}{device.get('device_id', 'Unknown')}{Colors.END} "
+                f"[{status_color}{device.get('state', 'Unknown')}{Colors.END}]"
+            )
+        return "\n".join(lines)
+    
+    @staticmethod
+    def format_packages_list(packages: list) -> str:
+        """Format package list - show ALL packages"""
+        if not packages:
+            return f"{Colors.YELLOW}No packages found{Colors.END}"
+        
+        total = len(packages)
+        
+        lines = [f"{Colors.BOLD}Installed Packages (Total: {total}):{Colors.END}\n"]
+        
+        # Group packages by category
+        categories = {
+            'System': [],
+            'Google': [],
+            'Samsung': [],
+            'Other': []
         }
-    except Exception as e:
-        return {"success": False, "stdout": "", "stderr": str(e)}
-
-
-# ========== Basic Device Management ==========
-
-def list_devices() -> str:
-    """List all connected Android devices"""
-    result = execute_adb(["devices", "-l"])
-    if not result["success"]:
-        return json.dumps({"success": False, "error": result["stderr"]})
+        
+        for pkg in packages:
+            if 'android' in pkg.lower() or 'system' in pkg.lower():
+                categories['System'].append(pkg)
+            elif 'google' in pkg.lower() or 'gms' in pkg.lower():
+                categories['Google'].append(pkg)
+            elif 'samsung' in pkg.lower() or 'sec.' in pkg.lower():
+                categories['Samsung'].append(pkg)
+            else:
+                categories['Other'].append(pkg)
+        
+        for category, pkgs in categories.items():
+            if pkgs:
+                lines.append(f"\n  {Colors.BOLD}{Colors.BLUE}{category} Apps ({len(pkgs)}):{Colors.END}")
+                for pkg in pkgs:  # Show ALL packages
+                    # Shorten package name for readability
+                    short_name = pkg.split('.')[-1] if '.' in pkg else pkg
+                    lines.append(f"    • {Colors.GREEN}{short_name}{Colors.END} {Colors.DIM}({pkg}){Colors.END}")
+        
+        return "\n".join(lines)
     
-    lines = result["stdout"].split("\n")[1:]
-    devices = []
-    for line in lines:
-        if line.strip():
-            parts = line.split()
-            if len(parts) >= 2:
-                devices.append({"device_id": parts[0], "state": parts[1]})
+    @staticmethod
+    def format_shell_output(output: str) -> str:
+        """Format shell command output - show complete output"""
+        if not output:
+            return f"{Colors.DIM}(no output){Colors.END}"
+        
+        return output
     
-    return json.dumps({"success": True, "count": len(devices), "devices": devices})
-
-
-def connect_device(device_id: Optional[str] = None) -> str:
-    """Connect to an Android device"""
-    global active_device_id
-    
-    if not device_id:
-        devices_result = json.loads(list_devices())
-        devices = devices_result.get("devices", [])
-        if len(devices) == 1:
-            device_id = devices[0]["device_id"]
+    @staticmethod
+    def format_result(result: dict) -> str:
+        """Smart formatting based on result content"""
+        if not result.get("success"):
+            error = result.get("error", "Unknown error")
+            return f"{Colors.RED}Error: {error}{Colors.END}"
+        
+        # Handle different result types
+        output_lines = []
+        
+        # Device info
+        if "device_info" in result:
+            output_lines.append(OutputFormatter.format_device_info(result["device_info"]))
+        
+        # Devices list
+        elif "devices" in result:
+            output_lines.append(OutputFormatter.format_devices_list(result["devices"]))
+        
+        # Packages list
+        elif "packages" in result:
+            output_lines.append(OutputFormatter.format_packages_list(result["packages"]))
+        
+        # Shell command output
+        elif "output" in result:
+            output = result["output"]
+            output_lines.append(f"{Colors.BOLD}Command Output:{Colors.END}")
+            output_lines.append(OutputFormatter.format_shell_output(output))
+        
+        # Simple message
+        elif "message" in result:
+            output_lines.append(f"{Colors.GREEN}{result['message']}{Colors.END}")
+        
+        # Device ID
+        elif "device_id" in result:
+            output_lines.append(f"{Colors.GREEN}Connected to: {result['device_id']}{Colors.END}")
+        
+        # Active device
+        elif "active_device_id" in result:
+            output_lines.append(f"{Colors.GREEN}Active device: {result['active_device_id']}{Colors.END}")
+        
+        # Generic success
         else:
-            return json.dumps({"success": False, "error": "Specify device_id or connect only one device"})
+            output_lines.append(f"{Colors.GREEN}Operation completed successfully{Colors.END}")
+        
+        return "\n".join(output_lines) if output_lines else f"{Colors.GREEN}Success{Colors.END}"
+
+
+class EnhancedAgent:
+    """Enhanced agent with beautiful output"""
     
-    result = execute_adb(["get-state"], device_id)
-    if result["success"] and "device" in result["stdout"]:
-        active_device_id = device_id
-        return json.dumps({"success": True, "device_id": device_id})
-    return json.dumps({"success": False, "error": "Cannot connect"})
-
-
-def get_device_info() -> str:
-    """Get device information"""
-    if not active_device_id:
-        return json.dumps({"success": False, "error": "No device connected"})
+    def __init__(self, name: str, role: str, mcp_client: MCPClient):
+        self.name = name
+        self.role = role
+        self.mcp_client = mcp_client
+        self.formatter = OutputFormatter()
     
-    props = {}
-    for key, prop in {"model": "ro.product.model", "manufacturer": "ro.product.manufacturer", 
-                      "android_version": "ro.build.version.release", "sdk_version": "ro.build.version.sdk"}.items():
-        result = execute_adb(["shell", "getprop", prop], active_device_id)
-        props[key] = result["stdout"] if result["success"] else "Unknown"
+    def _call_llm(self, prompt: str) -> str:
+        """Call the local LLM with a prompt"""
+        payload = {
+            "model": LLM_MODEL,
+            "messages": [
+                {"role": "system", "content": f"You are {self.role}"},
+                {"role": "user", "content": prompt}
+            ],
+            "temperature": 0.1,
+            "max_tokens": 1500
+        }
+        
+        try:
+            response = requests.post(
+                f"{LLM_BASE_URL}/chat/completions",
+                headers={"Content-Type": "application/json"},
+                json=payload,
+                timeout=60
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                if "choices" in result and len(result["choices"]) > 0:
+                    return result["choices"][0]["message"]["content"]
+            
+            return None
+            
+        except Exception as e:
+            self.formatter.print_error(f"LLM Error: {e}")
+            return None
     
-    battery = execute_adb(["shell", "dumpsys", "battery"], active_device_id)
-    if battery["success"]:
-        for line in battery["stdout"].split("\n"):
-            if "level:" in line:
-                props["battery_level"] = line.split("level:")[1].strip()
+    def _extract_tool_calls(self, llm_response: str) -> list:
+        """Extract tool calls from LLM response"""
+        try:
+            cleaned = llm_response.strip()
+            if "```json" in cleaned:
+                cleaned = cleaned.split("```json")[1].split("```")[0].strip()
+            elif "```" in cleaned:
+                cleaned = cleaned.split("```")[1].split("```")[0].strip()
+            
+            parsed = json.loads(cleaned)
+            
+            if "actions" in parsed:
+                return parsed["actions"]
+            elif "tool" in parsed:
+                return [parsed]
+            
+            return []
+            
+        except json.JSONDecodeError:
+            self.formatter.print_warning("Could not parse JSON, attempting text extraction...")
+            return []
     
-    return json.dumps({"success": True, "device_info": props})
+    def execute_task(self, task_description: str) -> dict:
+        """Execute a task with beautiful output"""
+        
+        # Print task header
+        self.formatter.print_header(f"🤖 {self.name}")
+        print(f"{Colors.BOLD}Task:{Colors.END} {task_description}\n")
+        
+        # Get available tools
+        available_tools = self.mcp_client.list_tools()
+        tool_descriptions = self.mcp_client.get_tool_descriptions()
+        
+        # Format tools for LLM
+        tools_info = []
+        for tool_name in available_tools:
+            if tool_name in tool_descriptions:
+                desc = tool_descriptions[tool_name]
+                tools_info.append(f"- {tool_name}: {desc['description']}")
+        
+        tools_text = "\n".join(tools_info)
+        
+        # Create prompt
+        prompt = f"""You are an Android Device Controller. Your task is to {task_description}.
 
+Available tools:
+{tools_text}
 
-# ========== App Management ==========
+IMPORTANT NOTES:
+- If only one device is connected, you do NOT need to call connect_device explicitly
+- Most tools work without needing device_id parameter
+- Only use connect_device if you need to switch devices or if explicitly asked
 
-def list_packages() -> str:
-    """List installed packages"""
-    if not active_device_id:
-        return json.dumps({"success": False, "error": "No device connected"})
+Analyze the task and respond with a JSON object containing:
+1. "reasoning": Brief explanation of your approach
+2. "actions": Array of tool calls needed to complete the task
+
+Format:
+{{
+    "reasoning": "I will get device info to find the model and Android version",
+    "actions": [
+        {{"tool": "get_device_info", "params": {{}}}}
+    ]
+}}
+
+Important:
+- Only use tools from the available list
+- Provide exact tool names
+- Most tools don't need any parameters
+- Respond ONLY with valid JSON, no other text
+
+Task: {task_description}
+"""
+        
+        self.formatter.print_info("Asking LLM for action plan...")
+        llm_response = self._call_llm(prompt)
+        
+        if not llm_response:
+            self.formatter.print_error("LLM did not respond")
+            return {"success": False, "error": "LLM did not respond"}
+        
+        # Show LLM reasoning (extract if present)
+        try:
+            cleaned = llm_response.strip()
+            if "```json" in cleaned:
+                cleaned = cleaned.split("```json")[1].split("```")[0].strip()
+            parsed = json.loads(cleaned)
+            if "reasoning" in parsed:
+                print(f"\n{Colors.DIM}💭 Reasoning: {parsed['reasoning']}{Colors.END}")
+        except:
+            pass
+        
+        # Extract actions
+        actions = self._extract_tool_calls(llm_response)
+        
+        if not actions:
+            actions = self._pattern_match_task(task_description)
+        
+        if not actions:
+            self.formatter.print_error("Could not determine actions to take")
+            return {"success": False, "error": "Could not determine actions"}
+        
+        # Execute actions
+        results = []
+        context = {}
+        
+        for i, action in enumerate(actions, 1):
+            tool_name = action.get("tool")
+            params = action.get("params", {})
+            
+            # Clean parameters
+            for key, value in params.items():
+                if isinstance(value, str):
+                    if value == "<active_device_id>" and "device_id" in context:
+                        params[key] = context["device_id"]
+                    elif value in ["null", "None", "none"]:
+                        params[key] = None
+            
+            self.formatter.print_step(i, len(actions), f"{tool_name}()")
+            
+            result = self.mcp_client.call_tool(tool_name, **params)
+            
+            # Auto-connect if needed
+            if not result.get("success") and "No device connected" in result.get("error", ""):
+                self.formatter.print_warning("Device not connected, auto-connecting...")
+                
+                connect_result = self.mcp_client.call_tool("connect_device")
+                if connect_result.get("success"):
+                    self.formatter.print_success("Auto-connected to device")
+                    
+                    if connect_result.get("device_id"):
+                        context["device_id"] = connect_result.get("device_id")
+                    
+                    result = self.mcp_client.call_tool(tool_name, **params)
+                else:
+                    self.formatter.print_error(f"Auto-connect failed: {connect_result.get('error')}")
+            
+            results.append({
+                "tool": tool_name,
+                "params": params,
+                "result": result
+            })
+            
+            # Print formatted result
+            print(f"\n{self.formatter.format_result(result)}\n")
+            
+            # Update context
+            if result.get("success"):
+                if tool_name == "list_devices" and result.get("devices"):
+                    devices = result.get("devices", [])
+                    if devices:
+                        context["device_id"] = devices[0]["device_id"]
+                elif tool_name == "connect_device" and result.get("device_id"):
+                    context["device_id"] = result.get("device_id")
+                elif tool_name == "get_active_device" and result.get("active_device_id"):
+                    context["device_id"] = result.get("active_device_id")
+        
+        return {
+            "success": True,
+            "task": task_description,
+            "actions_taken": len(actions),
+            "results": results
+        }
     
-    result = execute_adb(["shell", "pm", "list", "packages"], active_device_id)
-    if result["success"]:
-        packages = [line.replace("package:", "") for line in result["stdout"].split("\n") if line.strip()]
-        return json.dumps({"success": True, "count": len(packages), "packages": packages[:50]})  # Limit to 50
-    return json.dumps({"success": False, "error": result["stderr"]})
+    def _pattern_match_task(self, task: str) -> list:
+        """Fallback pattern matching"""
+        task_lower = task.lower()
+        
+        if any(word in task_lower for word in ["list", "show", "devices"]):
+            return [{"tool": "list_devices", "params": {}}]
+        
+        if any(word in task_lower for word in ["device info", "phone info", "device details"]):
+            return [{"tool": "get_device_info", "params": {}}]
+        
+        if "connect" in task_lower:
+            return [{"tool": "connect_device", "params": {}}]
+        
+        if "shell" in task_lower or "command" in task_lower:
+            match = re.search(r"command[:\s]+['\"](.+?)['\"]", task_lower)
+            if match:
+                cmd = match.group(1)
+                return [{"tool": "execute_shell_command", "params": {"command": cmd}}]
+        
+        return []
 
 
-def launch_app(package_name: str) -> str:
-    """Launch an app by package name"""
-    if not active_device_id:
-        return json.dumps({"success": False, "error": "No device connected"})
+class EnhancedOrchestrator:
+    """Enhanced orchestrator with beautiful output"""
     
-    result = execute_adb(["shell", "monkey", "-p", package_name, "-c", "android.intent.category.LAUNCHER", "1"], active_device_id)
-    if result["success"]:
-        return json.dumps({"success": True, "message": f"Launched {package_name}"})
-    return json.dumps({"success": False, "error": result["stderr"]})
-
-
-def stop_app(package_name: str) -> str:
-    """Force stop an app"""
-    if not active_device_id:
-        return json.dumps({"success": False, "error": "No device connected"})
+    def __init__(self):
+        self.agents = {}
+        self.formatter = OutputFormatter()
+        self._initialize_agents()
     
-    result = execute_adb(["shell", "am", "force-stop", package_name], active_device_id)
-    if result["success"]:
-        return json.dumps({"success": True, "message": f"Stopped {package_name}"})
-    return json.dumps({"success": False, "error": result["stderr"]})
-
-
-def install_apk(apk_path: str) -> str:
-    """Install an APK file"""
-    if not active_device_id:
-        return json.dumps({"success": False, "error": "No device connected"})
+    def _initialize_agents(self):
+        """Initialize agents"""
+        adb_client = MCPClient(adb_simple)
+        self.agents["adb"] = EnhancedAgent(
+            name="ADB Agent",
+            role="an expert in Android device management and ADB commands",
+            mcp_client=adb_client
+        )
     
-    result = execute_adb(["install", apk_path], active_device_id)
-    if result["success"]:
-        return json.dumps({"success": True, "message": f"Installed {apk_path}"})
-    return json.dumps({"success": False, "error": result["stderr"]})
-
-
-def uninstall_app(package_name: str) -> str:
-    """Uninstall an app"""
-    if not active_device_id:
-        return json.dumps({"success": False, "error": "No device connected"})
+    def route_task(self, task: str) -> dict:
+        """Route task to appropriate agent"""
+        agent = self.agents["adb"]
+        return agent.execute_task(task)
     
-    result = execute_adb(["uninstall", package_name], active_device_id)
-    if result["success"]:
-        return json.dumps({"success": True, "message": f"Uninstalled {package_name}"})
-    return json.dumps({"success": False, "error": result["stderr"]})
+    def interactive_mode(self):
+        """Run in interactive mode"""
+        self.formatter.print_header("🤖 AI Android Controller - Interactive Mode")
+        
+        print(f"{Colors.BOLD}Available agents:{Colors.END}")
+        for name, agent in self.agents.items():
+            print(f"  • {Colors.CYAN}{agent.name}{Colors.END}: {agent.role}")
+        
+        print(f"\n{Colors.BOLD}Commands:{Colors.END}")
+        print(f"  • Type your task in natural language")
+        print(f"  • {Colors.DIM}'quit' or 'exit' to stop{Colors.END}")
+        print(f"{Colors.CYAN}{'─'*70}{Colors.END}")
+        
+        while True:
+            try:
+                user_input = input(f"\n{Colors.BOLD}{Colors.GREEN}You ▸{Colors.END} ").strip()
+                
+                if user_input.lower() in ['quit', 'exit', 'q']:
+                    self.formatter.print_info("Goodbye! 👋")
+                    break
+                
+                if not user_input:
+                    continue
+                
+                result = self.route_task(user_input)
+                
+                # Print summary
+                self.formatter.print_subheader("Summary")
+                if result.get("success"):
+                    self.formatter.print_success(
+                        f"Task completed - {result.get('actions_taken', 0)} actions executed"
+                    )
+                else:
+                    self.formatter.print_error(f"Task failed: {result.get('error')}")
+                
+            except KeyboardInterrupt:
+                self.formatter.print_info("\nGoodbye! 👋")
+                break
+            except Exception as e:
+                self.formatter.print_error(f"Error: {e}")
+                import traceback
+                traceback.print_exc()
 
 
-# ========== Screen & Input ==========
-
-def take_screenshot(filename: Optional[str] = None) -> str:
-    """Take a screenshot"""
-    if not active_device_id:
-        return json.dumps({"success": False, "error": "No device connected"})
+def main():
+    """Main entry point"""
+    orchestrator = EnhancedOrchestrator()
     
-    if not filename:
-        filename = f"screenshot_{int(time.time())}.png"
-    
-    device_path = f"/sdcard/{filename}"
-    
-    # Take screenshot on device
-    result = execute_adb(["shell", "screencap", "-p", device_path], active_device_id)
-    if not result["success"]:
-        return json.dumps({"success": False, "error": result["stderr"]})
-    
-    # Pull to local
-    pull_result = execute_adb(["pull", device_path, filename], active_device_id)
-    if pull_result["success"]:
-        return json.dumps({"success": True, "message": f"Screenshot saved to {filename}"})
-    return json.dumps({"success": False, "error": pull_result["stderr"]})
-
-
-def tap_screen(x: int, y: int) -> str:
-    """Tap at coordinates"""
-    if not active_device_id:
-        return json.dumps({"success": False, "error": "No device connected"})
-    
-    result = execute_adb(["shell", "input", "tap", str(x), str(y)], active_device_id)
-    if result["success"]:
-        return json.dumps({"success": True, "message": f"Tapped at ({x}, {y})"})
-    return json.dumps({"success": False, "error": result["stderr"]})
-
-
-def swipe_screen(x1: int, y1: int, x2: int, y2: int, duration: int = 300) -> str:
-    """Swipe from (x1,y1) to (x2,y2)"""
-    if not active_device_id:
-        return json.dumps({"success": False, "error": "No device connected"})
-    
-    result = execute_adb(["shell", "input", "swipe", str(x1), str(y1), str(x2), str(y2), str(duration)], active_device_id)
-    if result["success"]:
-        return json.dumps({"success": True, "message": f"Swiped from ({x1},{y1}) to ({x2},{y2})"})
-    return json.dumps({"success": False, "error": result["stderr"]})
-
-
-def input_text(text: str) -> str:
-    """Input text"""
-    if not active_device_id:
-        return json.dumps({"success": False, "error": "No device connected"})
-    
-    # Escape special characters
-    text = text.replace(" ", "%s")
-    result = execute_adb(["shell", "input", "text", text], active_device_id)
-    if result["success"]:
-        return json.dumps({"success": True, "message": f"Typed: {text}"})
-    return json.dumps({"success": False, "error": result["stderr"]})
-
-
-def press_key(keycode: str) -> str:
-    """Press a key (BACK, HOME, MENU, etc)"""
-    if not active_device_id:
-        return json.dumps({"success": False, "error": "No device connected"})
-    
-    keycode_map = {
-        "back": "KEYCODE_BACK",
-        "home": "KEYCODE_HOME",
-        "menu": "KEYCODE_MENU",
-        "enter": "KEYCODE_ENTER",
-        "power": "KEYCODE_POWER"
-    }
-    
-    key = keycode_map.get(keycode.lower(), keycode)
-    result = execute_adb(["shell", "input", "keyevent", key], active_device_id)
-    if result["success"]:
-        return json.dumps({"success": True, "message": f"Pressed {key}"})
-    return json.dumps({"success": False, "error": result["stderr"]})
-
-
-# ========== File Operations ==========
-
-def push_file(local_path: str, device_path: str) -> str:
-    """Push file to device"""
-    if not active_device_id:
-        return json.dumps({"success": False, "error": "No device connected"})
-    
-    result = execute_adb(["push", local_path, device_path], active_device_id)
-    if result["success"]:
-        return json.dumps({"success": True, "message": f"Pushed {local_path} to {device_path}"})
-    return json.dumps({"success": False, "error": result["stderr"]})
-
-
-def pull_file(device_path: str, local_path: str) -> str:
-    """Pull file from device"""
-    if not active_device_id:
-        return json.dumps({"success": False, "error": "No device connected"})
-    
-    result = execute_adb(["pull", device_path, local_path], active_device_id)
-    if result["success"]:
-        return json.dumps({"success": True, "message": f"Pulled {device_path} to {local_path}"})
-    return json.dumps({"success": False, "error": result["stderr"]})
-
-
-# ========== System Commands ==========
-
-def execute_shell_command(command: str) -> str:
-    """Execute shell command"""
-    if not active_device_id:
-        return json.dumps({"success": False, "error": "No device connected"})
-    
-    result = execute_adb(["shell", command], active_device_id)
-    return json.dumps({"success": result["success"], "output": result["stdout"], "error": result["stderr"]})
-
-
-def reboot_device(mode: str = "normal") -> str:
-    """Reboot device (normal, recovery, bootloader)"""
-    if not active_device_id:
-        return json.dumps({"success": False, "error": "No device connected"})
-    
-    if mode == "recovery":
-        result = execute_adb(["reboot", "recovery"], active_device_id)
-    elif mode == "bootloader":
-        result = execute_adb(["reboot", "bootloader"], active_device_id)
+    if len(sys.argv) > 1:
+        # Command line mode
+        task = " ".join(sys.argv[1:])
+        result = orchestrator.route_task(task)
     else:
-        result = execute_adb(["reboot"], active_device_id)
-    
-    if result["success"]:
-        return json.dumps({"success": True, "message": f"Rebooting to {mode}"})
-    return json.dumps({"success": False, "error": result["stderr"]})
+        # Interactive mode
+        orchestrator.interactive_mode()
 
 
-# ========== Helper Functions ==========
-
-def disconnect_device() -> str:
-    """Disconnect from device"""
-    global active_device_id
-    if not active_device_id:
-        return json.dumps({"success": False, "error": "No device connected"})
-    active_device_id = None
-    return json.dumps({"success": True, "message": "Disconnected"})
-
-
-def get_active_device() -> str:
-    """Get active device ID"""
-    if active_device_id:
-        return json.dumps({"success": True, "active_device_id": active_device_id})
-    return json.dumps({"success": False, "message": "No device connected"})
+if __name__ == "__main__":
+    main()
