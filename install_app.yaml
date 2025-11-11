@@ -1,0 +1,84 @@
+name: Install App from Play Store
+description: Automated workflow to install an app from Google Play Store
+version: 1.0
+
+# Variables that can be passed when running the workflow
+# Example: workflow_engine.execute_workflow('workflows/install_app.yaml', {'app_name': 'WhatsApp'})
+variables:
+  app_name: "WhatsApp"  # Default value
+
+steps:
+  - name: Connect to Device
+    type: task
+    task: connect to the device
+    continue_on_error: false
+    
+  - name: Take Initial Screenshot
+    type: task
+    task: take a screenshot named before_install.png
+    delay: 1
+    
+  - name: Press Home Button
+    type: task
+    task: press home button
+    delay: 1
+    
+  - name: Launch Play Store
+    type: task
+    task: launch app com.android.vending
+    delay: 3
+    
+  - name: Take Play Store Screenshot
+    type: task
+    task: take a screenshot named play_store_opened.png
+    delay: 1
+    
+  - name: Search for App
+    type: task
+    task: tap at coordinates 540 300 then input text {{app_name}}
+    delay: 2
+    
+  - name: Press Enter to Search
+    type: task
+    task: press enter key
+    delay: 3
+    
+  - name: Take Search Results Screenshot
+    type: task
+    task: take a screenshot named search_results.png
+    delay: 1
+    
+  - name: Tap First Result
+    type: task
+    task: tap at coordinates 540 600
+    delay: 3
+    
+  - name: Take App Page Screenshot
+    type: task
+    task: take a screenshot named app_page.png
+    delay: 1
+    
+  - name: Tap Install Button
+    type: task
+    task: tap at coordinates 540 800
+    delay: 2
+    
+  - name: Verify Installation Started
+    type: task
+    task: take a screenshot named installing.png
+    delay: 5
+    
+  - name: Wait for Installation
+    type: set_variable
+    variable: wait_message
+    value: "Waiting for app installation to complete..."
+    
+  - name: Take Final Screenshot
+    type: task
+    task: take a screenshot named installation_complete.png
+    delay: 1
+    
+  - name: Return Home
+    type: task
+    task: press home button
+    continue_on_error: true
