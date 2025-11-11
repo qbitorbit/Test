@@ -1,0 +1,60 @@
+name: Device Setup and Validation
+description: Complete device setup workflow with info gathering and validation
+version: 1.0
+
+variables:
+  device_name: "Test Device"
+  
+steps:
+  - name: Connect to Device
+    type: task
+    task: connect to the device
+    store_as: device_connection
+    
+  - name: Get Device Information
+    type: task
+    task: get device info including model and android version
+    store_as: device_info
+    
+  - name: List Installed Packages
+    type: task
+    task: list installed packages
+    store_as: packages
+    delay: 2
+    
+  - name: Check Battery Status
+    type: task
+    task: execute shell command "dumpsys battery"
+    store_as: battery_status
+    
+  - name: Take Initial Screenshot
+    type: task
+    task: take a screenshot named device_initial_state.png
+    
+  - name: Press Home
+    type: task
+    task: press home button
+    delay: 1
+    
+  - name: Take Home Screenshot
+    type: task
+    task: take a screenshot named home_screen.png
+    
+  - name: Open Settings
+    type: task
+    task: launch app com.android.settings
+    delay: 2
+    
+  - name: Take Settings Screenshot  
+    type: task
+    task: take a screenshot named settings_screen.png
+    
+  - name: Return to Home
+    type: task
+    task: press home button
+    delay: 1
+    
+  - name: Device Setup Complete
+    type: set_variable
+    variable: setup_status
+    value: "Device setup and validation complete"
