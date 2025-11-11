@@ -1,0 +1,45 @@
+name: Create Device Report in Confluence
+description: Gathers device info and creates a report page in Confluence
+version: 1.0
+
+variables:
+  space_key: "DEV"
+  report_title: "Device Test Report"
+
+steps:
+  - name: Connect to Device
+    type: task
+    task: connect to the android device
+    store_as: device_connection
+    
+  - name: Get Device Info
+    type: task
+    task: get device information
+    store_as: device_info
+    delay: 1
+    
+  - name: Get Installed Apps Count
+    type: task
+    task: list installed packages
+    store_as: packages
+    delay: 1
+    
+  - name: Get Battery Status
+    type: task
+    task: execute shell command "dumpsys battery"
+    store_as: battery
+    
+  - name: Take Device Screenshot
+    type: task
+    task: take a screenshot named device_report_screenshot.png
+    delay: 1
+    
+  - name: Create Confluence Report
+    type: task
+    task: create a new page in {{space_key}} space titled "{{report_title}}" with content about the device testing results
+    store_as: confluence_page
+    
+  - name: Report Creation Complete
+    type: set_variable
+    variable: completion_message
+    value: "Device report created successfully in Confluence"
