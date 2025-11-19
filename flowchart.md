@@ -18,7 +18,7 @@ graph TD
         Agent -->|Decides| Logic[Reasoning Loop]:::py
     end
 
-    subgraph "MCP Tools"
+    subgraph MCP_Tools
         Logic -->|Calls| ADB[adb_tools.py]:::py
         Logic -->|Calls| Files[file_tools.py]:::py
         Logic -->|Calls| SQL[sqlite_reader.py]:::py
