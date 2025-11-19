@@ -1,0 +1,40 @@
+android-agent-commander/
+├── .env                        # Secrets (API keys, Device IDs)
+├── requirements.txt            # Python dependencies (langchain, pure-python-adb, etc.)
+├── main.py                     # ENTRY POINT: Terminal chat loop
+├── README.md                   # Documentation (Put the chart above here)
+│
+├── config/                     # Configuration Files
+│   ├── llm_config.py           # Setup for Local LLM (gpt-oss-120b connection)
+│   ├── settings.yaml           # Global settings (default device, paths)
+│   └── logging_config.py       # Debug logging setup
+│
+├── core/                       # The "Brain" of the application
+│   ├── orchestrator.py         # Decides which Agent/Workflow to use
+│   ├── memory_manager.py       # Manages LangChain conversation memory
+│   └── llm_client.py           # Wrapper for OpenAI/LangChain connection
+│
+├── agents/                     # AI Agents (The Logic)
+│   ├── __init__.py
+│   ├── base_agent.py           # Abstract class for all agents
+│   ├── agent_factory.py        # Logic to spawn the right agent
+│   ├── generic_agent.py        # Handles basic Android tasks
+│   ├── samsung_agent.py        # Specialized for Samsung OneUI
+│   └── app_installer_agent.py  # Workflow-specific agent
+│
+├── tools/                      # MCPs / Skills (The Hands)
+│   ├── __init__.py
+│   ├── adb_tools.py            # MCP: Basic ADB wrapper (shell, push, pull)
+│   ├── samsung_tools.py        # MCP: Samsung specific intents/settings
+│   ├── file_system_tools.py    # MCP: Local file operations
+│   └── sqlite_reader.py        # MCP: Tools to query fetched .sqlite files
+│
+├── data/                       # Static Data & Knowledge Base
+│   ├── workflows.yaml          # Predefined steps (e.g., "Unboxing", "Store Setup")
+│   ├── device_profiles.json    # Settings paths for S24, Pixel, Xiaomi
+│   └── local_storage/          # Temp folder for pulled files/DBs
+│       └── com.example.app/    # Example pulled app data
+│           └── app_data.sqlite
+│
+└── utils/                      # Helpers
+    └── adb_connection.py       # Low-level socket handling for ADB
