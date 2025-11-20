@@ -34,7 +34,7 @@ def execute_command(command: str) -> str:
 # Create tools list
 tools = [get_device_info, execute_command]
 
-# Create agent (LangChain 1.0+ uses create_agent with LangGraph)
+# Create agent
 agent = create_agent(
     model=llm,
     tools=tools
@@ -49,5 +49,13 @@ result = agent.invoke({
 })
 
 print("\n" + "=" * 60)
-print(f"✅ Result: {result['messages'][-1].content}")
+print("📋 Full conversation:")
+for msg in result['messages']:
+    if hasattr(msg, 'content') and msg.content:
+        print(f"\n{msg.type}: {msg.content}")
+    if hasattr(msg, 'tool_calls') and msg.tool_calls:
+        print(f"\n🔧 Tool calls: {msg.tool_calls}")
+
+print("\n" + "=" * 60)
+print(f"✅ Final Answer: {result['messages'][-1].content}")
 print("\n✅ Atlas basic infrastructure works!")
