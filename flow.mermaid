@@ -1,0 +1,45 @@
+graph TD
+    User[👤 User Input] --> Router[Command Router]
+    Router --> Supervisor[Universal Supervisor Agent]
+    
+    Supervisor --> DomainRouter{Domain Router<br/>What type of task?}
+    
+    DomainRouter -->|Android tasks| AndroidDomain[Android Domain]
+    DomainRouter -->|Web/API tasks| WebDomain[Web Services Domain]
+    DomainRouter -->|Database tasks| DataDomain[Data Domain]
+    DomainRouter -->|Code execution| CodeDomain[Code Domain]
+    DomainRouter -->|Future services| CustomDomain[Custom Domain N]
+    
+    AndroidDomain --> DeviceAgents[Device Agents]
+    DeviceAgents --> AndroidMCPs[Android MCPs<br/>ADB, Settings, Apps, Data]
+    AndroidMCPs --> Devices[📱 Android Devices]
+    
+    WebDomain --> APIAgents[API Agents]
+    APIAgents --> WebMCPs[Web MCPs<br/>REST, GraphQL, etc]
+    WebMCPs --> WebServices[🌐 Web Services]
+    
+    DataDomain --> DataAgents[Data Agents]
+    DataAgents --> DataMCPs[Data MCPs<br/>SQL, NoSQL, etc]
+    DataMCPs --> Databases[💾 Databases]
+    
+    CodeDomain --> CodeAgents[Code Agents]
+    CodeAgents --> CodeMCPs[Code MCPs<br/>Python, Node, etc]
+    CodeMCPs --> Execution[⚙️ Code Execution]
+    
+    CustomDomain --> CustomAgents[Custom Agents]
+    CustomAgents --> CustomMCPs[Custom MCPs]
+    CustomMCPs --> CustomServices[🔧 Custom Services]
+    
+    Devices --> Results[Results]
+    WebServices --> Results
+    Databases --> Results
+    Execution --> Results
+    CustomServices --> Results
+    
+    Results --> Supervisor
+    Supervisor --> Response[Response to User]
+    Response --> User
+    
+    style DomainRouter fill:#ffe1f5
+    style Supervisor fill:#e1f5ff
+    style Results fill:#e1ffe1
