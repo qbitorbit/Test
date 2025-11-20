@@ -1,4 +1,4 @@
-# atlas_test.py - Simple test for MCP + Agent + LLM integration (LangChain 1.0+)
+# atlas_test.py - Fixed version
 
 from langchain_openai import ChatOpenAI
 from langchain.agents import create_agent
@@ -15,29 +15,21 @@ llm = ChatOpenAI(
 # Simple MCP-like tools
 @tool
 def get_device_info(device_id: str) -> str:
-    """Get information about an Android device.
+    """Get information about an Android device including battery level.
     
     Args:
         device_id: The device serial number
+    
+    Returns:
+        Device information including battery percentage
     """
     return f"Device {device_id}: Samsung Galaxy S24+, Android 14, Battery: 85%"
 
-@tool
-def execute_command(command: str) -> str:
-    """Execute a shell command.
-    
-    Args:
-        command: The command to execute
-    """
-    return f"Executed: {command} - Success"
-
-# Create tools list
-tools = [get_device_info, execute_command]
-
-# Create agent
+# Create agent with system prompt
 agent = create_agent(
     model=llm,
-    tools=tools
+    tools=[get_device_info],
+    prompt="You are a helpful assistant. Use the available tools to answer questions. Always provide a clear final answer."
 )
 
 # Test
@@ -53,8 +45,6 @@ print("📋 Full conversation:")
 for msg in result['messages']:
     if hasattr(msg, 'content') and msg.content:
         print(f"\n{msg.type}: {msg.content}")
-    if hasattr(msg, 'tool_calls') and msg.tool_calls:
-        print(f"\n🔧 Tool calls: {msg.tool_calls}")
 
 print("\n" + "=" * 60)
 print(f"✅ Final Answer: {result['messages'][-1].content}")
