@@ -1,7 +1,8 @@
-# atlas_test.py - Fixed version
+# atlas_test.py - Fixed with middleware for system prompt
 
 from langchain_openai import ChatOpenAI
 from langchain.agents import create_agent
+from langchain.agents.middleware import dynamic_prompt, ModelRequest
 from langchain.tools import tool
 
 # Your local LLM connection
@@ -12,7 +13,7 @@ llm = ChatOpenAI(
     temperature=0.1
 )
 
-# Simple MCP-like tools
+# Simple MCP-like tool
 @tool
 def get_device_info(device_id: str) -> str:
     """Get information about an Android device including battery level.
@@ -25,11 +26,17 @@ def get_device_info(device_id: str) -> str:
     """
     return f"Device {device_id}: Samsung Galaxy S24+, Android 14, Battery: 85%"
 
-# Create agent with system prompt
+# System prompt middleware
+@dynamic_prompt
+def system_prompt(request: ModelRequest) -> str:
+    """System prompt for the agent."""
+    return "You are a helpful assistant. Use the available tools to answer questions completely."
+
+# Create agent with middleware
 agent = create_agent(
     model=llm,
     tools=[get_device_info],
-    prompt="You are a helpful assistant. Use the available tools to answer questions. Always provide a clear final answer."
+    middleware=[system_prompt]
 )
 
 # Test
