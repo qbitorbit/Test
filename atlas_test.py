@@ -1,11 +1,9 @@
-# atlas_test.py - Fixed with middleware for system prompt
+# atlas_test.py - Stream version to debug
 
 from langchain_openai import ChatOpenAI
 from langchain.agents import create_agent
-from langchain.agents.middleware import dynamic_prompt, ModelRequest
 from langchain.tools import tool
 
-# Your local LLM connection
 llm = ChatOpenAI(
     base_url="http://10.202.1.3:8000/v1",
     api_key="dummy-key",
@@ -13,46 +11,31 @@ llm = ChatOpenAI(
     temperature=0.1
 )
 
-# Simple MCP-like tool
 @tool
 def get_device_info(device_id: str) -> str:
     """Get information about an Android device including battery level.
     
     Args:
         device_id: The device serial number
-    
-    Returns:
-        Device information including battery percentage
     """
+    print(f"\n🔧 TOOL CALLED: get_device_info(device_id='{device_id}')")
     return f"Device {device_id}: Samsung Galaxy S24+, Android 14, Battery: 85%"
 
-# System prompt middleware
-@dynamic_prompt
-def system_prompt(request: ModelRequest) -> str:
-    """System prompt for the agent."""
-    return "You are a helpful assistant. Use the available tools to answer questions completely."
+agent = create_agent(model=llm, tools=[get_device_info])
 
-# Create agent with middleware
-agent = create_agent(
-    model=llm,
-    tools=[get_device_info],
-    middleware=[system_prompt]
-)
-
-# Test
 print("🧪 Testing Atlas - Basic Agent + Tools + LLM\n")
 print("=" * 60)
 
-result = agent.invoke({
-    "messages": [{"role": "user", "content": "What is the battery level of device ABC123?"}]
-})
+for chunk in agent.stream(
+    {"messages": [{"role": "user", "content": "What is the battery level of device ABC123?"}]},
+    stream_mode="values"
+):
+    latest_msg = chunk["messages"][-1]
+    print(f"\n📨 Message type: {latest_msg.type}")
+    if hasattr(latest_msg, 'content') and latest_msg.content:
+        print(f"Content: {latest_msg.content}")
+    if hasattr(latest_msg, 'tool_calls') and latest_msg.tool_calls:
+        print(f"Tool calls: {latest_msg.tool_calls}")
 
 print("\n" + "=" * 60)
-print("📋 Full conversation:")
-for msg in result['messages']:
-    if hasattr(msg, 'content') and msg.content:
-        print(f"\n{msg.type}: {msg.content}")
-
-print("\n" + "=" * 60)
-print(f"✅ Final Answer: {result['messages'][-1].content}")
 print("\n✅ Atlas basic infrastructure works!")
