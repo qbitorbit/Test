@@ -1,0 +1,187 @@
+
+
+# 🎓 AI Learning Path – Ordered by Understanding (Beginner → Advanced)
+
+---
+
+## 00. **Agentic-AI**
+
+**📁 Folder:** `Agentic-AI`
+**🏷️ Title:** *What Is Agentic AI? (The Big Picture)*
+**🧭 Why first:**
+Sets the vision: AI that **acts**, not just answers. This frames everything that comes after.
+
+---
+
+## 01. **AI-Model**
+
+**📁 Folder:** `AI-Model`
+**🏷️ Title:** *What Is an AI Model and How It Works*
+**🧭 Why:**
+Before prompts, agents, or tools — people must understand *what a model actually is*.
+
+---
+
+## 02. **AI-Tokens**
+
+**📁 Folder:** `AI-Tokens`
+**🏷️ Title:** *Tokens: How AI Sees and Processes Text*
+**🧭 Why:**
+Explains limits, costs, hallucinations, and why prompts behave strangely.
+
+---
+
+## 03. **Markdown The Universal Language for AI**
+
+**📁 Folder:** `Markdown The Universal Language for AI`
+**🏷️ Title:** *Why Markdown Is the Language of AI Systems*
+**🧭 Why:**
+Markdown underpins prompts, tools, agents, RAG, and system instructions.
+
+---
+
+## 04. **Prompt Engineering**
+
+**📁 Folder:** `Prompt Engineering`
+**🏷️ Title:** *Prompt Engineering Fundamentals*
+**🧭 Why:**
+First practical control layer people can actually use.
+
+---
+
+## 05. **Prompt Engineering User Versus System Instructions**
+
+**📁 Folder:** `Prompt Engineering User Versus System Instructions`
+**🏷️ Title:** *User vs System Instructions: Who Really Controls the Model*
+**🧭 Why:**
+This is a **critical mental shift** for enterprise AI usage.
+
+---
+
+## 06. **Context Engineering**
+
+**📁 Folder:** `Context-Engineering`
+**🏷️ Title:** *Context Engineering: Managing What the Model Knows*
+**🧭 Why:**
+Explains memory, relevance, confusion, and prompt failure modes.
+
+---
+
+## 07. **Chain-of-Thought**
+
+**📁 Folder:** `Chain-of-Thought`
+**🏷️ Title:** *Chain-of-Thought: How Models Reason Step by Step*
+**🧭 Why:**
+Introduces reasoning transparency and structured thinking.
+
+---
+
+## 08. **ReAct-Reasoning-and-Acting**
+
+**📁 Folder:** `ReAct-Reasoning-and-Acting`
+**🏷️ Title:** *ReAct: Reasoning + Acting with Tools*
+**🧭 Why:**
+Bridge from “thinking” → “doing”.
+
+---
+
+## 09. **AI-Agents**
+
+**📁 Folder:** `AI-Agents`
+**🏷️ Title:** *AI Agents: From Answers to Autonomous Actions*
+**🧭 Why:**
+Introduces autonomy, goals, memory, and tool usage.
+
+---
+
+## 10. **Agent Orchestration**
+
+**📁 Folder:** `Agent Orchestration`
+**🏷️ Title:** *Agent Orchestration: Coordinating Multiple AI Agents*
+**🧭 Why:**
+Single-agent is not enough for real systems.
+
+---
+
+## 11. **Anthropic-AI-Agent-Team**
+
+**📁 Folder:** `Anthropic-AI-Agent-Team`
+**🏷️ Title:** *Multi-Agent Teams: Roles, Planning, and Collaboration*
+**🧭 Why:**
+Shows real-world agent team patterns used in production.
+
+---
+
+## 12. **RAG-Retrieval-Augmented-Generation**
+
+**📁 Folder:** `RAG-Retrieval-Augmented-Generation`
+**🏷️ Title:** *RAG: Connecting AI to Company Knowledge*
+**🧭 Why:**
+This is the **core enterprise use case** (Confluence, Jira, PDFs).
+
+---
+
+## 13. **MCP-Model Context Protocol**
+
+**📁 Folder:** `MCP-Model Context Protocol`
+**🏷️ Title:** *MCP: The Protocol That Connects AI to Tools*
+**🧭 Why:**
+Introduces standardized AI ↔ system communication.
+
+---
+
+## 14. **Skills**
+
+**📁 Folder:** `Skills`
+**🏷️ Title:** *AI Skills: What Agents Can Do*
+**🧭 Why:**
+Clarifies reusable capabilities vs prompts vs tools.
+
+---
+
+## 15. **Skills-vs-MCP**
+
+**📁 Folder:** `Skills-vs-MCP`
+**🏷️ Title:** *Skills vs MCP: Responsibilities and Boundaries*
+**🧭 Why:**
+Prevents architectural confusion when systems grow.
+
+---
+
+## 16. **AI-Multimodal**
+
+**📁 Folder:** `AI-Multimodal`
+**🏷️ Title:** *Multimodal AI: Text, Images, Audio, and Video*
+**🧭 Why:**
+Advanced capability layer — not day-one material.
+
+---
+
+## 17. **MoE-Mixture of Experts**
+
+**📁 Folder:** `MoE-Mixture of Experts`
+**🏷️ Title:** *Mixture of Experts: How Models Scale Intelligently*
+**🧭 Why:**
+Explains performance, routing, and large-scale models.
+
+---
+
+## 18. **Human-in-the-Loop**
+
+**📁 Folder:** `Human-in-the-Loop`
+**🏷️ Title:** *Human-in-the-Loop: Control, QA, and Trust*
+**🧭 Why:**
+Critical for QA teams, governance, and safety.
+
+---
+
+## 19. **OpenCode**
+
+**📁 Folder:** `OpenCode`
+**🏷️ Title:** *OpenCode: Applying AI Agents in Real Systems*
+**🧭 Why last:**
+Concrete implementation after understanding **everything else**.
+
+---
+
+
