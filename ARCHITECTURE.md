@@ -1,127 +1,54 @@
-# QA Department Structure
-```mermaid
-graph TD
+graph TB
     QA[QA Department]
     
-    %% Shared Resources
-    QA --> SHARED[SHARED Resources - All QA]
-    SHARED --> SHARED_MCP[mcp/]
-    SHARED --> SHARED_AGENTS[agents/]
-    SHARED --> SHARED_SKILLS[skills/]
-    SHARED --> SHARED_CONFIG[opencode.json]
-    SHARED --> SHARED_RULES[rules/]
+    QA --> SHARED[QA Shared Resources]
+    SHARED --> S_MCP[mcp/]
+    SHARED --> S_AGENTS[agents/]
+    SHARED --> S_SKILLS[skills/]
+    SHARED --> S_CONFIG[opencode.json]
     
-    %% Department 1: QA Automation
-    QA --> DEPT1[Department 1: QA Automation]
-    DEPT1 --> DEPT1_SHARED[Department Shared Resources]
-    DEPT1_SHARED --> DEPT1_MCP[mcp/]
-    DEPT1_SHARED --> DEPT1_AGENTS[agents/]
-    DEPT1_SHARED --> DEPT1_SKILLS[skills/]
-    DEPT1_SHARED --> DEPT1_CONFIG[opencode.json]
-    DEPT1_SHARED --> DEPT1_RULES[rules/]
+    QA --> D1[Dept 1: QA Automation]
+    D1 --> D1_SHARED[Dept Shared]
+    D1_SHARED --> D1_MCP[mcp/]
+    D1_SHARED --> D1_AGENTS[agents/]
+    D1_SHARED --> D1_SKILLS[skills/]
     
-    DEPT1 --> TEAM1_1[Team: AI Quality Tech Lead]
-    TEAM1_1 --> TEAM1_1_MCP[mcp/]
-    TEAM1_1 --> TEAM1_1_AGENTS[agents/]
-    TEAM1_1 --> TEAM1_1_SKILLS[skills/]
-    TEAM1_1 --> TEAM1_1_CONFIG[opencode.json]
-    TEAM1_1 --> TEAM1_1_AGENTS_MD[AGENTS.md]
+    D1 --> T1_1[Team: AI Quality Tech Lead]
+    D1 --> T1_2[Team: Platform Mock]
+    D1 --> T1_3[Team: Real Devices]
+    D1 --> T1_4[Team: QA Operations]
     
-    DEPT1 --> TEAM1_2[Team: QA Automation - Platform Mock UI + API]
-    TEAM1_2 --> TEAM1_2_MCP[mcp/]
-    TEAM1_2 --> TEAM1_2_AGENTS[agents/]
-    TEAM1_2 --> TEAM1_2_SKILLS[skills/]
-    TEAM1_2 --> TEAM1_2_CONFIG[opencode.json]
-    TEAM1_2 --> TEAM1_2_AGENTS_MD[AGENTS.md]
+    T1_1 --> T1_1_RES[mcp/ agents/ skills/ opencode.json AGENTS.md]
+    T1_2 --> T1_2_RES[mcp/ agents/ skills/ opencode.json AGENTS.md]
+    T1_3 --> T1_3_RES[mcp/ agents/ skills/ opencode.json AGENTS.md]
+    T1_4 --> T1_4_RES[mcp/ agents/ skills/ opencode.json AGENTS.md]
     
-    DEPT1 --> TEAM1_3[Team: QA Automation - Platform Real Devices iOS + Android]
-    TEAM1_3 --> TEAM1_3_MCP[mcp/]
-    TEAM1_3 --> TEAM1_3_AGENTS[agents/]
-    TEAM1_3 --> TEAM1_3_SKILLS[skills/]
-    TEAM1_3 --> TEAM1_3_CONFIG[opencode.json]
-    TEAM1_3 --> TEAM1_3_AGENTS_MD[AGENTS.md]
+    QA --> D2[Dept 2: QA Manual]
+    D2 --> D2_SHARED[Dept Shared]
+    D2_SHARED --> D2_MCP[mcp/]
+    D2_SHARED --> D2_AGENTS[agents/]
+    D2_SHARED --> D2_SKILLS[skills/]
     
-    DEPT1 --> TEAM1_4[Team: QA Operation - Environments & Solutions]
-    TEAM1_4 --> TEAM1_4_MCP[mcp/]
-    TEAM1_4 --> TEAM1_4_AGENTS[agents/]
-    TEAM1_4 --> TEAM1_4_SKILLS[skills/]
-    TEAM1_4 --> TEAM1_4_CONFIG[opencode.json]
-    TEAM1_4 --> TEAM1_4_AGENTS_MD[AGENTS.md]
+    D2 --> T2_1[Team: Platform + Android]
+    D2 --> T2_2[Team: Access 1]
+    D2 --> T2_3[Team: Access 2]
+    D2 --> T2_4[Team: Other Product]
     
-    %% Department 2: QA Manual
-    QA --> DEPT2[Department 2: QA Manual]
-    DEPT2 --> DEPT2_SHARED[Department Shared Resources]
-    DEPT2_SHARED --> DEPT2_MCP[mcp/]
-    DEPT2_SHARED --> DEPT2_AGENTS[agents/]
-    DEPT2_SHARED --> DEPT2_SKILLS[skills/]
-    DEPT2_SHARED --> DEPT2_CONFIG[opencode.json]
-    DEPT2_SHARED --> DEPT2_RULES[rules/]
+    T2_1 --> T2_1_RES[mcp/ agents/ skills/ opencode.json AGENTS.md]
+    T2_2 --> T2_2_RES[mcp/ agents/ skills/ opencode.json AGENTS.md]
+    T2_3 --> T2_3_RES[mcp/ agents/ skills/ opencode.json AGENTS.md]
+    T2_4 --> T2_4_RES[mcp/ agents/ skills/ opencode.json AGENTS.md]
     
-    DEPT2 --> TEAM2_1[Team: QA Manual - Platform + Android]
-    TEAM2_1 --> TEAM2_1_MCP[mcp/]
-    TEAM2_1 --> TEAM2_1_AGENTS[agents/]
-    TEAM2_1 --> TEAM2_1_SKILLS[skills/]
-    TEAM2_1 --> TEAM2_1_CONFIG[opencode.json]
-    TEAM2_1 --> TEAM2_1_AGENTS_MD[AGENTS.md]
+    QA --> D3[Dept 3: QA Manual]
+    D3 --> D3_SHARED[Dept Shared]
+    D3_SHARED --> D3_MCP[mcp/]
+    D3_SHARED --> D3_AGENTS[agents/]
+    D3_SHARED --> D3_SKILLS[skills/]
     
-    DEPT2 --> TEAM2_2[Team: QA Manual - Access]
-    TEAM2_2 --> TEAM2_2_MCP[mcp/]
-    TEAM2_2 --> TEAM2_2_AGENTS[agents/]
-    TEAM2_2 --> TEAM2_2_SKILLS[skills/]
-    TEAM2_2 --> TEAM2_2_CONFIG[opencode.json]
-    TEAM2_2 --> TEAM2_2_AGENTS_MD[AGENTS.md]
+    D3 --> T3_1[Team: Platform + iOS]
+    D3 --> T3_2[Team: Forensic]
+    D3 --> T3_3[Team: Access 3]
     
-    DEPT2 --> TEAM2_3[Team: QA Manual - Access 2]
-    TEAM2_3 --> TEAM2_3_MCP[mcp/]
-    TEAM2_3 --> TEAM2_3_AGENTS[agents/]
-    TEAM2_3 --> TEAM2_3_SKILLS[skills/]
-    TEAM2_3 --> TEAM2_3_CONFIG[opencode.json]
-    TEAM2_3 --> TEAM2_3_AGENTS_MD[AGENTS.md]
-    
-    DEPT2 --> TEAM2_4[Team: QA Manual - Other Product]
-    TEAM2_4 --> TEAM2_4_MCP[mcp/]
-    TEAM2_4 --> TEAM2_4_AGENTS[agents/]
-    TEAM2_4 --> TEAM2_4_SKILLS[skills/]
-    TEAM2_4 --> TEAM2_4_CONFIG[opencode.json]
-    TEAM2_4 --> TEAM2_4_AGENTS_MD[AGENTS.md]
-    
-    %% Department 3: QA Manual
-    QA --> DEPT3[Department 3: QA Manual]
-    DEPT3 --> DEPT3_SHARED[Department Shared Resources]
-    DEPT3_SHARED --> DEPT3_MCP[mcp/]
-    DEPT3_SHARED --> DEPT3_AGENTS[agents/]
-    DEPT3_SHARED --> DEPT3_SKILLS[skills/]
-    DEPT3_SHARED --> DEPT3_CONFIG[opencode.json]
-    DEPT3_SHARED --> DEPT3_RULES[rules/]
-    
-    DEPT3 --> TEAM3_1[Team: QA Manual - Platform + iOS]
-    TEAM3_1 --> TEAM3_1_MCP[mcp/]
-    TEAM3_1 --> TEAM3_1_AGENTS[agents/]
-    TEAM3_1 --> TEAM3_1_SKILLS[skills/]
-    TEAM3_1 --> TEAM3_1_CONFIG[opencode.json]
-    TEAM3_1 --> TEAM3_1_AGENTS_MD[AGENTS.md]
-    
-    DEPT3 --> TEAM3_2[Team: QA Manual - Forensic]
-    TEAM3_2 --> TEAM3_2_MCP[mcp/]
-    TEAM3_2 --> TEAM3_2_AGENTS[agents/]
-    TEAM3_2 --> TEAM3_2_SKILLS[skills/]
-    TEAM3_2 --> TEAM3_2_CONFIG[opencode.json]
-    TEAM3_2 --> TEAM3_2_AGENTS_MD[AGENTS.md]
-    
-    DEPT3 --> TEAM3_3[Team: QA Manual - Access]
-    TEAM3_3 --> TEAM3_3_MCP[mcp/]
-    TEAM3_3 --> TEAM3_3_AGENTS[agents/]
-    TEAM3_3 --> TEAM3_3_SKILLS[skills/]
-    TEAM3_3 --> TEAM3_3_CONFIG[opencode.json]
-    TEAM3_3 --> TEAM3_3_AGENTS_MD[AGENTS.md]
-    
-    style QA fill:#e1f5ff
-    style SHARED fill:#fff9c4
-    style DEPT1 fill:#c8e6c9
-    style DEPT2 fill:#c8e6c9
-    style DEPT3 fill:#c8e6c9
-    style DEPT1_SHARED fill:#ffe0b2
-    style DEPT2_SHARED fill:#ffe0b2
-    style DEPT3_SHARED fill:#ffe0b2
-```
-
+    T3_1 --> T3_1_RES[mcp/ agents/ skills/ opencode.json AGENTS.md]
+    T3_2 --> T3_2_RES[mcp/ agents/ skills/ opencode.json AGENTS.md]
+    T3_3 --> T3_3_RES[mcp/ agents/ skills/ opencode.json AGENTS.md]
