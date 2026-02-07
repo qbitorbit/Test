@@ -1,0 +1,261 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="QA Department Structure" id="qa-dept-structure">
+    <mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        
+        <!-- QA Department Root -->
+        <mxCell id="qa-root" value="QA Department" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5ff;strokeColor=#000000;fontSize=16;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="450" y="40" width="200" height="60" as="geometry" />
+        </mxCell>
+        
+        <!-- SHARED Resources -->
+        <mxCell id="shared-root" value="SHARED Resources&#xa;(All QA)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff9c4;strokeColor=#000000;fontSize=14;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="450" y="140" width="200" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-qa-shared" edge="1" parent="1" source="qa-root" target="shared-root">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- SHARED subfolders -->
+        <mxCell id="shared-mcp" value="mcp/" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f0f0f0" vertex="1" parent="1">
+          <mxGeometry x="320" y="230" width="80" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="shared-agents" value="agents/" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f0f0f0" vertex="1" parent="1">
+          <mxGeometry x="410" y="230" width="80" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="shared-skills" value="skills/" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f0f0f0" vertex="1" parent="1">
+          <mxGeometry x="500" y="230" width="80" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="shared-config" value="opencode.json" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f0f0f0" vertex="1" parent="1">
+          <mxGeometry x="590" y="230" width="100" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="shared-rules" value="rules/" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f0f0f0" vertex="1" parent="1">
+          <mxGeometry x="700" y="230" width="80" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="edge-shared-mcp" edge="1" parent="1" source="shared-root" target="shared-mcp">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-shared-agents" edge="1" parent="1" source="shared-root" target="shared-agents">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-shared-skills" edge="1" parent="1" source="shared-root" target="shared-skills">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-shared-config" edge="1" parent="1" source="shared-root" target="shared-config">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-shared-rules" edge="1" parent="1" source="shared-root" target="shared-rules">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- Department 1: QA Automation -->
+        <mxCell id="dept1-root" value="Department 1&#xa;QA Automation" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#000000;fontSize=14;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="100" y="320" width="200" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-qa-dept1" edge="1" parent="1" source="qa-root" target="dept1-root">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- Dept 1 Shared -->
+        <mxCell id="dept1-shared" value="Dept Shared Resources" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe0b2;strokeColor=#000000;fontSize=12" vertex="1" parent="1">
+          <mxGeometry x="100" y="420" width="200" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-dept1-shared" edge="1" parent="1" source="dept1-root" target="dept1-shared">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- Dept 1 Shared Subfolders -->
+        <mxCell id="dept1-mcp" value="mcp/" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f0f0f0;fontSize=10" vertex="1" parent="1">
+          <mxGeometry x="50" y="480" width="60" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="dept1-agents" value="agents/" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f0f0f0;fontSize=10" vertex="1" parent="1">
+          <mxGeometry x="120" y="480" width="60" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="dept1-skills" value="skills/" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f0f0f0;fontSize=10" vertex="1" parent="1">
+          <mxGeometry x="190" y="480" width="60" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="dept1-config" value="config" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f0f0f0;fontSize=10" vertex="1" parent="1">
+          <mxGeometry x="260" y="480" width="50" height="25" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="edge-d1s-mcp" edge="1" parent="1" source="dept1-shared" target="dept1-mcp">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-d1s-agents" edge="1" parent="1" source="dept1-shared" target="dept1-agents">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-d1s-skills" edge="1" parent="1" source="dept1-shared" target="dept1-skills">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-d1s-config" edge="1" parent="1" source="dept1-shared" target="dept1-config">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- Dept 1 Teams -->
+        <mxCell id="team1-1" value="Team: AI Quality&#xa;Tech Lead" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#000000;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="40" y="540" width="120" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="team1-2" value="Team: QA Auto&#xa;Platform Mock" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#000000;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="170" y="540" width="120" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="team1-3" value="Team: QA Auto&#xa;Real Devices" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#000000;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="40" y="600" width="120" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="team1-4" value="Team: QA Ops&#xa;Environments" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#000000;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="170" y="600" width="120" height="50" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="edge-d1-t1" edge="1" parent="1" source="dept1-root" target="team1-1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-d1-t2" edge="1" parent="1" source="dept1-root" target="team1-2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-d1-t3" edge="1" parent="1" source="dept1-root" target="team1-3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-d1-t4" edge="1" parent="1" source="dept1-root" target="team1-4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- Department 2: QA Manual -->
+        <mxCell id="dept2-root" value="Department 2&#xa;QA Manual" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#000000;fontSize=14;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="450" y="320" width="200" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-qa-dept2" edge="1" parent="1" source="qa-root" target="dept2-root">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- Dept 2 Shared -->
+        <mxCell id="dept2-shared" value="Dept Shared Resources" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe0b2;strokeColor=#000000;fontSize=12" vertex="1" parent="1">
+          <mxGeometry x="450" y="420" width="200" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-dept2-shared" edge="1" parent="1" source="dept2-root" target="dept2-shared">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- Dept 2 Shared Subfolders -->
+        <mxCell id="dept2-mcp" value="mcp/" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f0f0f0;fontSize=10" vertex="1" parent="1">
+          <mxGeometry x="400" y="480" width="60" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="dept2-agents" value="agents/" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f0f0f0;fontSize=10" vertex="1" parent="1">
+          <mxGeometry x="470" y="480" width="60" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="dept2-skills" value="skills/" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f0f0f0;fontSize=10" vertex="1" parent="1">
+          <mxGeometry x="540" y="480" width="60" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="dept2-config" value="config" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f0f0f0;fontSize=10" vertex="1" parent="1">
+          <mxGeometry x="610" y="480" width="50" height="25" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="edge-d2s-mcp" edge="1" parent="1" source="dept2-shared" target="dept2-mcp">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-d2s-agents" edge="1" parent="1" source="dept2-shared" target="dept2-agents">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-d2s-skills" edge="1" parent="1" source="dept2-shared" target="dept2-skills">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-d2s-config" edge="1" parent="1" source="dept2-shared" target="dept2-config">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- Dept 2 Teams -->
+        <mxCell id="team2-1" value="Team: QA Manual&#xa;Platform + Android" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#000000;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="380" y="540" width="120" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="team2-2" value="Team: QA Manual&#xa;Access 1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#000000;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="510" y="540" width="120" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="team2-3" value="Team: QA Manual&#xa;Access 2" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#000000;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="380" y="600" width="120" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="team2-4" value="Team: QA Manual&#xa;Other Product" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#000000;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="510" y="600" width="120" height="50" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="edge-d2-t1" edge="1" parent="1" source="dept2-root" target="team2-1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-d2-t2" edge="1" parent="1" source="dept2-root" target="team2-2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-d2-t3" edge="1" parent="1" source="dept2-root" target="team2-3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-d2-t4" edge="1" parent="1" source="dept2-root" target="team2-4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- Department 3: QA Manual -->
+        <mxCell id="dept3-root" value="Department 3&#xa;QA Manual" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#000000;fontSize=14;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="800" y="320" width="200" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-qa-dept3" edge="1" parent="1" source="qa-root" target="dept3-root">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- Dept 3 Shared -->
+        <mxCell id="dept3-shared" value="Dept Shared Resources" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe0b2;strokeColor=#000000;fontSize=12" vertex="1" parent="1">
+          <mxGeometry x="800" y="420" width="200" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-dept3-shared" edge="1" parent="1" source="dept3-root" target="dept3-shared">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- Dept 3 Shared Subfolders -->
+        <mxCell id="dept3-mcp" value="mcp/" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f0f0f0;fontSize=10" vertex="1" parent="1">
+          <mxGeometry x="750" y="480" width="60" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="dept3-agents" value="agents/" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f0f0f0;fontSize=10" vertex="1" parent="1">
+          <mxGeometry x="820" y="480" width="60" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="dept3-skills" value="skills/" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f0f0f0;fontSize=10" vertex="1" parent="1">
+          <mxGeometry x="890" y="480" width="60" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="dept3-config" value="config" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f0f0f0;fontSize=10" vertex="1" parent="1">
+          <mxGeometry x="960" y="480" width="50" height="25" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="edge-d3s-mcp" edge="1" parent="1" source="dept3-shared" target="dept3-mcp">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-d3s-agents" edge="1" parent="1" source="dept3-shared" target="dept3-agents">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-d3s-skills" edge="1" parent="1" source="dept3-shared" target="dept3-skills">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-d3s-config" edge="1" parent="1" source="dept3-shared" target="dept3-config">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- Dept 3 Teams -->
+        <mxCell id="team3-1" value="Team: QA Manual&#xa;Platform + iOS" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#000000;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="750" y="540" width="120" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="team3-2" value="Team: QA Manual&#xa;Forensic" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#000000;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="880" y="540" width="120" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="team3-3" value="Team: QA Manual&#xa;Access 3" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#000000;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="815" y="600" width="120" height="50" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="edge-d3-t1" edge="1" parent="1" source="dept3-root" target="team3-1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-d3-t2" edge="1" parent="1" source="dept3-root" target="team3-2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-d3-t3" edge="1" parent="1" source="dept3-root" target="team3-3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
