@@ -1,3 +1,5 @@
+# QA Department Structure
+```mermaid
 graph TB
     QA[QA Department]
     
@@ -18,11 +20,6 @@ graph TB
     D1 --> T1_3[Team: Real Devices]
     D1 --> T1_4[Team: QA Operations]
     
-    T1_1 --> T1_1_RES[mcp/ agents/ skills/ opencode.json AGENTS.md]
-    T1_2 --> T1_2_RES[mcp/ agents/ skills/ opencode.json AGENTS.md]
-    T1_3 --> T1_3_RES[mcp/ agents/ skills/ opencode.json AGENTS.md]
-    T1_4 --> T1_4_RES[mcp/ agents/ skills/ opencode.json AGENTS.md]
-    
     QA --> D2[Dept 2: QA Manual]
     D2 --> D2_SHARED[Dept Shared]
     D2_SHARED --> D2_MCP[mcp/]
@@ -34,11 +31,6 @@ graph TB
     D2 --> T2_3[Team: Access 2]
     D2 --> T2_4[Team: Other Product]
     
-    T2_1 --> T2_1_RES[mcp/ agents/ skills/ opencode.json AGENTS.md]
-    T2_2 --> T2_2_RES[mcp/ agents/ skills/ opencode.json AGENTS.md]
-    T2_3 --> T2_3_RES[mcp/ agents/ skills/ opencode.json AGENTS.md]
-    T2_4 --> T2_4_RES[mcp/ agents/ skills/ opencode.json AGENTS.md]
-    
     QA --> D3[Dept 3: QA Manual]
     D3 --> D3_SHARED[Dept Shared]
     D3_SHARED --> D3_MCP[mcp/]
@@ -48,7 +40,4 @@ graph TB
     D3 --> T3_1[Team: Platform + iOS]
     D3 --> T3_2[Team: Forensic]
     D3 --> T3_3[Team: Access 3]
-    
-    T3_1 --> T3_1_RES[mcp/ agents/ skills/ opencode.json AGENTS.md]
-    T3_2 --> T3_2_RES[mcp/ agents/ skills/ opencode.json AGENTS.md]
-    T3_3 --> T3_3_RES[mcp/ agents/ skills/ opencode.json AGENTS.md]
+```
